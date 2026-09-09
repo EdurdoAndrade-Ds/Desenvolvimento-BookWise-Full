@@ -1,5 +1,7 @@
 # BookWise
 
+![CI](https://github.com/EdurdoAndrade-Ds/Desenvolvimento-BookWise-Full/actions/workflows/ci.yml/badge.svg)
+
 Sistema para gestão de bibliotecas e livrarias — monorepo com backend e frontend.
 
 Principais pontos
@@ -29,6 +31,11 @@ Tecnologias
 
 - Backend: Java 17, Spring Boot, Spring Data JPA, Flyway, PostgreSQL (H2 para local)
 - Frontend: React, TypeScript, Vite, Tailwind, three.js / @react-three/fiber
+
+
+Status de build
+
+O repositório possui GitHub Actions que constroem e testam o backend e o frontend em cada push/PR. Consulte o badge acima ou a aba Actions no GitHub para histórico e logs.
 
 Como executar (rápido)
 
