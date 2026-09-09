@@ -1,0 +1,27 @@
+services:
+  - type: web
+    name: bookwise
+    runtime: docker
+    plan: free
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        fromDatabase:
+          name: bookwise-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: bookwise-db
+          property: password
+
+databases:
+  - name: bookwise-db
+    plan: free
+    databaseName: bookwise
+    user: bookwise
