@@ -133,6 +133,36 @@ COALESCE, EXTRACT, subconsultas correlacionadas e LIMIT):
 Defaults configuraveis em `bookwise.report.*` (`low-stock-threshold`, `history-months`,
 `ranking-size`).
 
+## Edicao de livros e ajuste de precos
+
+No back-office (`/adm/livros`) cada linha tem acoes de **editar** (titulo, autor, ISBN,
+genero, ano, formato, preco, estoque e categorias, via `PUT /api/v1/books/{id}`) e de
+**ajustar preco**. O ajuste roda como `UPDATE` em SQL nativo
+(`BookJpaRepository.applyPriceFactor`), com filtros parametrizados por livro, categoria
+ou trecho do titulo — sem filtro, atinge todo o acervo:
+
+```sql
+update books
+   set price = round(price * :factor, 2)
+ where price is not null
+   and (:bookId is null or id = :bookId)
+   and (:titlePattern is null or lower(title) like lower(:titlePattern))
+   and (:categoryId is null or exists (
+         select 1 from book_categories bc
+          where bc.book_id = books.id and bc.category_id = :categoryId))
+```
+
+```http
+POST /api/v1/books/price-adjustments
+{ "percentage": 8, "type": "DISCOUNT", "bookId": 1 }
+
+200 OK
+{ "type": "DISCOUNT", "percentage": 8, "factor": 0.92, "updatedBooks": 1 }
+```
+
+Desconto de 8% usa fator `0.92` (`1 - 8/100`); `type: "INCREASE"` aplica `1.08`. O
+percentual aceito vai de 0,01 a 90.
+
 ## Pendencias
 
 - [ ] Definir e implementar a Fase 2 de autenticacao (login, cadastro, recuperacao de
@@ -144,7 +174,7 @@ Defaults configuraveis em `bookwise.report.*` (`low-stock-threshold`, `history-m
 - [ ] Completar as regras de emprestimo: limites, renovacao e bloqueio por multa
   pendente; tornar prazo e multa configuraveis.
 - [ ] Atualizar multas de emprestimos ainda em atraso, mesmo antes da devolucao.
-- [ ] Completar a edicao de livros e categorias no back-office do frontend.
+- [ ] Completar a edicao de categorias no back-office do frontend (livros ja editaveis).
 - [ ] Resolver a discrepancia entre DER e DDL (`Livro.editora`/`preco` versus
   `genero`) com o grupo.
 - [ ] Inicializar o versionamento Git e configurar CI/CD.

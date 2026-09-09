@@ -2,7 +2,9 @@ package com.bookwise.infrastructure.web;
 
 import com.bookwise.application.dto.BookRequest;
 import com.bookwise.application.dto.BookResponse;
+import com.bookwise.application.dto.DiscountRequest;
 import com.bookwise.application.dto.PageResponse;
+import com.bookwise.application.dto.PriceAdjustmentResponse;
 import com.bookwise.application.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -64,6 +66,13 @@ public class BookController {
     @Operation(summary = "Atualiza um livro")
     public BookResponse update(@PathVariable Long id, @Valid @RequestBody BookRequest request) {
         return service.update(id, request);
+    }
+
+    @PostMapping("/price-adjustments")
+    @Operation(summary = "Aplica desconto ou aumento percentual nos precos", description = "Executa um UPDATE em SQL nativo multiplicando o preco pelo fator do percentual informado (8% de desconto = fator 0.92). Filtros opcionais por livro, categoria e trecho do titulo.")
+    public PriceAdjustmentResponse applyPriceAdjustment(
+            @Valid @RequestBody DiscountRequest request) {
+        return service.applyPriceAdjustment(request);
     }
 
     @DeleteMapping("/{id}")

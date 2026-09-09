@@ -535,6 +535,33 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+  /api/v1/books/price-adjustments:
+    post:
+      tags: [Books]
+      summary: Aplica desconto ou aumento percentual nos precos
+      description: >-
+        Executa um UPDATE em SQL nativo multiplicando o preco pelo fator do percentual
+        informado (8% de desconto = fator 0.92). Os filtros sao opcionais e combinaveis;
+        sem filtros o ajuste atinge todo o acervo.
+      operationId: applyBookPriceAdjustment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PriceAdjustmentRequest'
+      responses:
+        '200':
+          description: Ajuste aplicado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PriceAdjustmentResult'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /api/v1/books/{id}:
     parameters:
       - $ref: '#/components/parameters/IdParam'
@@ -1002,6 +1029,52 @@ components:
         name:
           type: string
           example: Tecnologia
+
+    # ---------- Ajuste de precos ----------
+    PriceAdjustmentType:
+      type: string
+      enum: [DISCOUNT, INCREASE]
+      default: DISCOUNT
+    PriceAdjustmentRequest:
+      type: object
+      required: [percentage]
+      properties:
+        percentage:
+          type: number
+          format: double
+          minimum: 0.01
+          maximum: 90
+          example: 8
+        type:
+          $ref: '#/components/schemas/PriceAdjustmentType'
+        bookId:
+          type: integer
+          format: int64
+          description: Aplica somente ao livro informado
+        categoryId:
+          type: integer
+          format: int64
+          description: Aplica aos livros da categoria informada
+        titleContains:
+          type: string
+          description: Aplica aos livros cujo titulo contem o trecho informado
+    PriceAdjustmentResult:
+      type: object
+      properties:
+        type:
+          $ref: '#/components/schemas/PriceAdjustmentType'
+        percentage:
+          type: number
+          format: double
+          example: 8
+        factor:
+          type: number
+          format: double
+          example: 0.92
+        updatedBooks:
+          type: integer
+          format: int32
+          example: 1
 
     # ---------- Loan ----------
     LoanItemRequest:

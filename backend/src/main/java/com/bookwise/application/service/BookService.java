@@ -2,13 +2,18 @@ package com.bookwise.application.service;
 
 import com.bookwise.application.dto.BookRequest;
 import com.bookwise.application.dto.BookResponse;
+import com.bookwise.application.dto.DiscountRequest;
 import com.bookwise.application.dto.PageResponse;
+import com.bookwise.application.dto.PriceAdjustmentResponse;
 import com.bookwise.application.mapper.BookMapper;
 import com.bookwise.domain.exception.BookNotFoundException;
 import com.bookwise.domain.exception.CategoryNotFoundException;
 import com.bookwise.domain.model.Book;
+import com.bookwise.domain.model.PriceAdjustment;
+import com.bookwise.domain.model.PriceAdjustmentType;
 import com.bookwise.domain.port.BookRepository;
 import com.bookwise.domain.port.CategoryRepository;
+import java.math.BigDecimal;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -106,6 +111,31 @@ public class BookService {
             throw new BookNotFoundException(id);
         }
         repository.deleteById(id);
+    }
+
+    /**
+     * Aplica um desconto (ou aumento) percentual sobre os precos, em uma unica
+     * instrucao SQL nativa, sem carregar os livros na aplicacao.
+     *
+     * @param request percentual, sentido do ajuste e filtro dos livros
+     * @return fator aplicado e quantidade de livros atualizados
+     * @throws BookNotFoundException     se o livro informado nao existir
+     * @throws CategoryNotFoundException se a categoria informada nao existir
+     */
+    public PriceAdjustmentResponse applyPriceAdjustment(DiscountRequest request) {
+        if (request.bookId() != null && !repository.existsById(request.bookId())) {
+            throw new BookNotFoundException(request.bookId());
+        }
+        if (request.categoryId() != null && !categoryRepository.existsById(request.categoryId())) {
+            throw new CategoryNotFoundException(request.categoryId());
+        }
+        PriceAdjustmentType type = request.resolvedType();
+        BigDecimal factor = type.factorFor(request.percentage());
+        int updated = repository.adjustPrices(
+                factor,
+                new PriceAdjustment(
+                        request.bookId(), request.categoryId(), request.titleContains()));
+        return new PriceAdjustmentResponse(type, request.percentage(), factor, updated);
     }
 
     private void validateCategories(List<Long> categoryIds) {

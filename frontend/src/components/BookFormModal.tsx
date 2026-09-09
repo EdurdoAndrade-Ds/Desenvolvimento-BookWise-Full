@@ -1,27 +1,46 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { X } from 'lucide-react';
-import type { BookFormat, Category } from '../types/api';
+import type { Book, BookFormat, Category } from '../types/api';
 import { booksService, type BookInput } from '../services/booksService';
 import { categoriesService } from '../services/categoriesService';
 import { ApiError } from '../services/http';
 
 interface BookFormModalProps {
   onClose: () => void;
-  onCreated: () => void;
+  onSaved: () => void;
+  /** Quando informado, o modal edita o livro em vez de criar um novo. */
+  book?: Book;
 }
 
-export default function BookFormModal({ onClose, onCreated }: BookFormModalProps) {
-  const [form, setForm] = useState<BookInput>({
-    title: '',
-    author: '',
-    isbn: '',
-    genre: '',
-    publishedYear: undefined,
-    format: 'PHYSICAL',
-    price: undefined,
-    stock: undefined,
-    categoryIds: [],
-  });
+function toInput(book?: Book): BookInput {
+  if (!book) {
+    return {
+      title: '',
+      author: '',
+      isbn: '',
+      genre: '',
+      publishedYear: undefined,
+      format: 'PHYSICAL',
+      price: undefined,
+      stock: undefined,
+      categoryIds: [],
+    };
+  }
+  return {
+    title: book.title,
+    author: book.author,
+    isbn: book.isbn,
+    genre: book.genre ?? '',
+    publishedYear: book.publishedYear ?? undefined,
+    format: book.format,
+    price: book.price ?? undefined,
+    stock: book.stock ?? undefined,
+    categoryIds: (book.categories ?? []).map((c) => c.id),
+  };
+}
+
+export default function BookFormModal({ onClose, onSaved, book }: BookFormModalProps) {
+  const [form, setForm] = useState<BookInput>(() => toInput(book));
   const [categories, setCategories] = useState<Category[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -60,8 +79,12 @@ export default function BookFormModal({ onClose, onCreated }: BookFormModalProps
     setSaving(true);
     setError(null);
     try {
-      await booksService.create(form);
-      onCreated();
+      if (book) {
+        await booksService.update(book.id, form);
+      } else {
+        await booksService.create(form);
+      }
+      onSaved();
       onClose();
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Erro ao salvar o livro.');
@@ -74,7 +97,9 @@ export default function BookFormModal({ onClose, onCreated }: BookFormModalProps
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-lg rounded-xl bg-white shadow-xl dark:bg-slate-900">
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
-          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">Novo livro</h2>
+          <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
+            {book ? 'Editar livro' : 'Novo livro'}
+          </h2>
           <button
             onClick={onClose}
             className="rounded-full p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"

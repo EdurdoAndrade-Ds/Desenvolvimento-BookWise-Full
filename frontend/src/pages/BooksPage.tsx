@@ -1,10 +1,11 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, Search, Trash2, BookOpen, RefreshCw } from 'lucide-react';
+import { Plus, Search, Trash2, Pencil, Percent, BookOpen, RefreshCw } from 'lucide-react';
 import type { Book, Page } from '../types/api';
-import { booksService } from '../services/booksService';
+import { booksService, type PriceAdjustmentResult } from '../services/booksService';
 import { ApiError } from '../services/http';
 import { formatCurrency, formatBookFormat } from '../lib/format';
 import BookFormModal from '../components/BookFormModal';
+import PriceAdjustmentModal from '../components/PriceAdjustmentModal';
 import { useFeedback } from '../feedback/useFeedback';
 
 const PAGE_SIZE = 8;
@@ -16,7 +17,9 @@ export default function BooksPage() {
   const [search, setSearch] = useState('');
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
-  const [showModal, setShowModal] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<Book | null>(null);
+  const [adjusting, setAdjusting] = useState<{ book?: Book } | null>(null);
   const { confirm, notify } = useFeedback();
 
   const load = useCallback(async () => {
@@ -65,6 +68,14 @@ export default function BooksPage() {
     }
   };
 
+  const handleAdjusted = async (result: PriceAdjustmentResult) => {
+    await load();
+    const label = result.type === 'DISCOUNT' ? 'Desconto' : 'Aumento';
+    notify(
+      `${label} de ${result.percentage}% aplicado em ${result.updatedBooks} livro(s) (fator ${result.factor}).`,
+    );
+  };
+
   const meta = data?.meta;
 
   return (
@@ -80,13 +91,22 @@ export default function BooksPage() {
             className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
           />
         </div>
-        <button
-          onClick={() => setShowModal(true)}
-          className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
-        >
-          <Plus className="h-4 w-4" />
-          Novo livro
-        </button>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setAdjusting({})}
+            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <Percent className="h-4 w-4" />
+            Aplicar desconto
+          </button>
+          <button
+            onClick={() => setShowForm(true)}
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-medium text-white hover:bg-brand-700"
+          >
+            <Plus className="h-4 w-4" />
+            Novo livro
+          </button>
+        </div>
       </div>
 
       {/* Conteudo */}
@@ -175,6 +195,20 @@ export default function BooksPage() {
                   </td>
                   <td className="px-6 py-3 text-right">
                     <button
+                      onClick={() => setAdjusting({ book })}
+                      className="rounded-md p-1.5 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-500/10"
+                      title="Ajustar preço"
+                    >
+                      <Percent className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => setEditing(book)}
+                      className="rounded-md p-1.5 text-slate-400 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-500/10"
+                      title="Editar"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={() => handleDelete(book)}
                       className="rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
                       title="Remover"
@@ -214,7 +248,17 @@ export default function BooksPage() {
         </div>
       )}
 
-      {showModal && <BookFormModal onClose={() => setShowModal(false)} onCreated={load} />}
+      {showForm && <BookFormModal onClose={() => setShowForm(false)} onSaved={load} />}
+
+      {editing && <BookFormModal book={editing} onClose={() => setEditing(null)} onSaved={load} />}
+
+      {adjusting && (
+        <PriceAdjustmentModal
+          book={adjusting.book}
+          onClose={() => setAdjusting(null)}
+          onApplied={handleAdjusted}
+        />
+      )}
     </div>
   );
 }

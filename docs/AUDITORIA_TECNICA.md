@@ -350,3 +350,33 @@ frontend: npm test          -> 3 arquivos, 9 testes, todos passando
 frontend: npm run build     -> built (aviso de chunk > 500 kB, pré-existente)
 API local (perfil local/H2): os 5 endpoints responderam 200 com dados agregados do seed
 ```
+
+---
+
+## 12. Edição de livros e ajuste de preços em SQL nativo (Fase 6)
+
+| Ponto | Correção aplicada | Status |
+|---|---|---|
+| Back-office sem edição de livro | `BookFormModal` passou a operar em modo criação **e** edição (prop `book`), com botão de lápis por linha em `BooksPage`; usa o `PUT /api/v1/books/{id}` que já existia | ✅ feito |
+| Desconto/aumento de preço | novo `POST /api/v1/books/price-adjustments` com `UPDATE books SET price = ROUND(price * :factor, 2)` em SQL nativo (`BookJpaRepository.applyPriceFactor`), filtros parametrizados por livro, categoria (`EXISTS` em `book_categories`) e trecho do título | ✅ feito |
+| Fórmula do desconto | `PriceAdjustmentType.DISCOUNT` calcula `1 - pct/100` (8% → **0.92**) e `INCREASE` calcula `1 + pct/100` (8% → 1.08); o `*1.08` do enunciado seria aumento, não desconto | ✅ corrigido |
+| Camadas | porta `BookRepository.adjustPrices`, record de domínio `PriceAdjustment`, adapter monta o `LIKE` como valor de parâmetro (sem concatenar SQL), DTOs `DiscountRequest`/`PriceAdjustmentResponse` | ✅ feito |
+| Validação | percentual obrigatório entre 0,01 e 90; `bookId`/`categoryId` inexistentes retornam 404 | ✅ feito |
+| Contrato e docs | `contracts/openapi.yaml` (path + `PriceAdjustmentRequest`/`PriceAdjustmentResult`/`PriceAdjustmentType`) e seção nova no `README.md` | ✅ feito |
+| Testes | `BookControllerTest` (+4: update de preço/estoque, desconto de 8% resultando em 45.91, percentual inválido 400 e livro inexistente 404) e `booksService.test.ts` no frontend | ✅ feito |
+
+```text
+POST /api/v1/books/price-adjustments
+{ "percentage": 8, "type": "DISCOUNT", "bookId": 1 }
+-> { "type": "DISCOUNT", "percentage": 8, "factor": 0.92, "updatedBooks": 1 }
+```
+
+**Verificação executada nesta rodada:**
+
+```text
+backend : mvn test          -> Tests run: 81, Failures: 0, Errors: 0  (BUILD SUCCESS)
+frontend: npm run lint      -> 0 erros / 0 warnings
+frontend: npm run typecheck -> OK
+frontend: npm test          -> 4 arquivos, 11 testes, todos passando
+frontend: npm run build     -> built (aviso de chunk > 500 kB, pré-existente)
+```
