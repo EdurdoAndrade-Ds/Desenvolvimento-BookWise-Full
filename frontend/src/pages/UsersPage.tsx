@@ -5,6 +5,7 @@ import { usersService } from '../services/usersService';
 import { ApiError } from '../services/http';
 import { formatUserRole } from '../lib/format';
 import UserFormModal from '../components/UserFormModal';
+import { useFeedback } from '../feedback/useFeedback';
 
 const PAGE_SIZE = 8;
 
@@ -22,6 +23,7 @@ export default function UsersPage() {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const { confirm, notify } = useFeedback();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -54,12 +56,18 @@ export default function UsersPage() {
   }, [search]);
 
   const handleDelete = async (user: User) => {
-    if (!window.confirm(`Remover "${user.name}"?`)) return;
+    const confirmed = await confirm({
+      title: `Remover "${user.name}"?`,
+      confirmLabel: 'Remover',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await usersService.remove(user.id);
       await load();
+      notify(`Usuário "${user.name}" removido.`);
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : 'Erro ao remover o usuário.');
+      notify(err instanceof ApiError ? err.message : 'Erro ao remover o usuário.', 'error');
     }
   };
 

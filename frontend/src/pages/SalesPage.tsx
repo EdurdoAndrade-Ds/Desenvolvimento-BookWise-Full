@@ -6,6 +6,7 @@ import { ApiError } from '../services/http';
 import { formatCurrency, formatDate } from '../lib/format';
 import { SALE_STATUS_LABELS, SALE_STATUS_STYLES } from '../lib/saleStatus';
 import SaleFormModal from '../components/SaleFormModal';
+import { useFeedback } from '../feedback/useFeedback';
 
 const PAGE_SIZE = 8;
 
@@ -15,6 +16,7 @@ export default function SalesPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const { confirm, notify } = useFeedback();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,12 +39,19 @@ export default function SalesPage() {
   }, [load]);
 
   const handleCancel = async (sale: Sale) => {
-    if (!window.confirm(`Cancelar a venda #${sale.id}? O estoque será restaurado.`)) return;
+    const confirmed = await confirm({
+      title: `Cancelar a venda #${sale.id}?`,
+      message: 'O estoque dos itens físicos será restaurado.',
+      confirmLabel: 'Cancelar venda',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await salesService.cancel(sale.id);
       await load();
+      notify(`Venda #${sale.id} cancelada.`);
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : 'Erro ao cancelar a venda.');
+      notify(err instanceof ApiError ? err.message : 'Erro ao cancelar a venda.', 'error');
     }
   };
 

@@ -291,6 +291,7 @@ e consistência visual.
 | 6.3 / 10 | Testes: backend `LoanServiceTest` (novas regras) e `ReservationServiceTest`; frontend Vitest em `services/http.test.ts` e `services/loansService.test.ts` | ✅ feito |
 | 6.4 | Removidos `frontend/vite.config.js`, `frontend/vite.config.d.ts` e `frontend/tsconfig.node.tsbuildinfo`; `.pdftmp/` adicionado ao `.gitignore` | ✅ feito |
 | 11 | Repositório versionado (Git inicializado) e `ci.yml` do frontend passou a rodar lint, Prettier, typecheck, testes e build (backend segue com `mvn verify`) | ✅ feito |
+| 6.5 | `window.confirm`/`alert` substituídos por `FeedbackProvider` (modal de confirmação + toasts) usado por Empréstimos, Reservas, Vendas, Multas, Livros, Categorias e Usuários — diálogos nativos são ignorados quando a app roda dentro de um iframe, o que fazia o botão "Devolver" parecer inoperante | ✅ feito |
 
 **Verificação executada nesta rodada:**
 
@@ -305,9 +306,8 @@ frontend: npm run build   -> built (aviso de chunk > 500 kB, pré-existente)
 
 ### Itens conscientemente não alterados
 - **1.3** (herança Cliente/Funcionário), **2.5** (`OpenApiConfig` fora das camadas), **4.3**
-  (acentuação), **6.5** (`window.confirm`/`alert`), **7** (compose sem frontend, seed
-  local × Flyway, discrepância DER × DDL) — decisões de modelagem/produto, mantidas como
-  reportadas.
+  (acentuação), **7** (compose sem frontend, seed local × Flyway, discrepância DER × DDL) —
+  decisões de modelagem/produto, mantidas como reportadas.
 - Os defaults de negócio adotados (`max-active-per-user: 5`, `max-items-per-loan: 5`,
   `max-renewals: 2`, `renewal-days: 7`, `hold-stock: true`) são **sugestões**
   configuráveis em `application.yml`; ajuste conforme a regra do trabalho.

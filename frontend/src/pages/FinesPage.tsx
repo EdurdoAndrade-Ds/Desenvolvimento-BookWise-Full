@@ -5,6 +5,7 @@ import { finesService } from '../services/finesService';
 import { ApiError } from '../services/http';
 import { formatCurrency, formatDate } from '../lib/format';
 import { FINE_STATUS_LABELS, FINE_STATUS_STYLES } from '../lib/fineStatus';
+import { useFeedback } from '../feedback/useFeedback';
 
 const PAGE_SIZE = 8;
 
@@ -13,6 +14,7 @@ export default function FinesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
+  const { confirm, notify } = useFeedback();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -35,15 +37,18 @@ export default function FinesPage() {
   }, [load]);
 
   const handlePay = async (fine: Fine) => {
-    if (
-      !window.confirm(`Registrar pagamento da multa #${fine.id} (${formatCurrency(fine.value)})?`)
-    )
-      return;
+    const confirmed = await confirm({
+      title: `Registrar pagamento da multa #${fine.id}?`,
+      message: `Valor: ${formatCurrency(fine.value)}.`,
+      confirmLabel: 'Registrar pagamento',
+    });
+    if (!confirmed) return;
     try {
       await finesService.pay(fine.id);
       await load();
+      notify(`Pagamento da multa #${fine.id} registrado.`);
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : 'Erro ao registrar pagamento.');
+      notify(err instanceof ApiError ? err.message : 'Erro ao registrar pagamento.', 'error');
     }
   };
 

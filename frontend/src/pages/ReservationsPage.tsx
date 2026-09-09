@@ -6,6 +6,7 @@ import { ApiError } from '../services/http';
 import { formatDate } from '../lib/format';
 import { RESERVATION_STATUS_LABELS, RESERVATION_STATUS_STYLES } from '../lib/reservationStatus';
 import ReservationFormModal from '../components/ReservationFormModal';
+import { useFeedback } from '../feedback/useFeedback';
 
 const PAGE_SIZE = 8;
 
@@ -15,6 +16,7 @@ export default function ReservationsPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const { confirm, notify } = useFeedback();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,12 +39,19 @@ export default function ReservationsPage() {
   }, [load]);
 
   const handleCancel = async (reservation: Reservation) => {
-    if (!window.confirm(`Cancelar a reserva #${reservation.id}?`)) return;
+    const confirmed = await confirm({
+      title: `Cancelar a reserva #${reservation.id}?`,
+      message: 'O estoque retido pela reserva será liberado.',
+      confirmLabel: 'Cancelar reserva',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await reservationsService.cancel(reservation.id);
       await load();
+      notify(`Reserva #${reservation.id} cancelada.`);
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : 'Erro ao cancelar a reserva.');
+      notify(err instanceof ApiError ? err.message : 'Erro ao cancelar a reserva.', 'error');
     }
   };
 

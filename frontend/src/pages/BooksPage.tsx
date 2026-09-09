@@ -5,6 +5,7 @@ import { booksService } from '../services/booksService';
 import { ApiError } from '../services/http';
 import { formatCurrency, formatBookFormat } from '../lib/format';
 import BookFormModal from '../components/BookFormModal';
+import { useFeedback } from '../feedback/useFeedback';
 
 const PAGE_SIZE = 8;
 
@@ -16,6 +17,7 @@ export default function BooksPage() {
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const { confirm, notify } = useFeedback();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -48,12 +50,18 @@ export default function BooksPage() {
   }, [search]);
 
   const handleDelete = async (book: Book) => {
-    if (!window.confirm(`Remover "${book.title}"?`)) return;
+    const confirmed = await confirm({
+      title: `Remover "${book.title}"?`,
+      confirmLabel: 'Remover',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await booksService.remove(book.id);
       await load();
+      notify(`Livro "${book.title}" removido.`);
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : 'Erro ao remover o livro.');
+      notify(err instanceof ApiError ? err.message : 'Erro ao remover o livro.', 'error');
     }
   };
 
