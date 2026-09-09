@@ -1,0 +1,25 @@
+# Build
+backend/target/
+frontend/dist/
+frontend/node_modules/
+frontend/.vite/
+backend/src/main/resources/static/
+
+# TypeScript
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE / SO
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Ambiente
+.env
+.env.local
+.pdftmp/
