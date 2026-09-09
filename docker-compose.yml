@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: bookwise-db
+    environment:
+      POSTGRES_DB: bookwise
+      POSTGRES_USER: bookwise
+      POSTGRES_PASSWORD: bookwise
+    ports:
+      - "5432:5432"
+    volumes:
+      - bookwise-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookwise -d bookwise"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bookwise-api
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:postgresql://db:5432/bookwise
+      DB_USERNAME: bookwise
+      DB_PASSWORD: bookwise
+    ports:
+      - "8080:8080"
+
+volumes:
+  bookwise-db-data:
