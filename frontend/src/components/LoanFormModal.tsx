@@ -135,7 +135,7 @@ export default function LoanFormModal({ onClose, onCreated }: LoanFormModalProps
                   <select
                     value={item.bookId}
                     onChange={(e) => updateItem(index, 'bookId', e.target.value)}
-                    className={`${inputClass} flex-1`}
+                    className={`${fieldClass} min-w-0 flex-1`}
                   >
                     <option value={0}>Selecione um livro...</option>
                     {books.map((b) => (
@@ -150,7 +150,7 @@ export default function LoanFormModal({ onClose, onCreated }: LoanFormModalProps
                     min="1"
                     value={item.quantity}
                     onChange={(e) => updateItem(index, 'quantity', e.target.value)}
-                    className={`${inputClass} w-20`}
+                    className={`${fieldClass} w-20 shrink-0`}
                   />
                   <button
                     type="button"
@@ -188,5 +188,7 @@ export default function LoanFormModal({ onClose, onCreated }: LoanFormModalProps
   );
 }
 
-const inputClass =
-  'w-full rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100';
+const fieldClass =
+  'rounded-lg border border-slate-200 px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100';
+
+const inputClass = `w-full ${fieldClass}`;
