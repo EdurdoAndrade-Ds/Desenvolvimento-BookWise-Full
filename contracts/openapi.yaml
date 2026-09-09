@@ -37,8 +37,104 @@ tags:
     description: Multas de emprestimos em atraso
   - name: Schema
     description: Metadados estruturais do banco de dados
+  - name: Reports
+    description: Relatorios analiticos agregados no banco (SQL nativo)
 
 paths:
+  # ==================================================================
+  # REPORTS
+  # ==================================================================
+  /api/v1/reports/summary:
+    get:
+      tags: [Reports]
+      summary: Indicadores consolidados do acervo
+      operationId: reportSummary
+      description: >
+        Contagens, estoque, emprestimos em aberto/atrasados, vendas pagas do mes
+        e multas pendentes, calculados em uma unica consulta SQL nativa.
+      responses:
+        '200':
+          description: Indicadores consolidados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LibrarySummary'
+  /api/v1/reports/top-books:
+    get:
+      tags: [Reports]
+      summary: Livros mais emprestados
+      operationId: reportTopBooks
+      parameters:
+        - $ref: '#/components/parameters/ReportLimitParam'
+      responses:
+        '200':
+          description: Ranking de livros
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookRanking'
+  /api/v1/reports/loans-by-month:
+    get:
+      tags: [Reports]
+      summary: Serie historica de emprestimos por mes
+      operationId: reportLoansByMonth
+      parameters:
+        - name: months
+          in: query
+          description: Quantidade de meses da serie (padrao configurado no servidor)
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+      responses:
+        '200':
+          description: Serie mensal, incluindo meses sem movimento
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MonthlyLoan'
+  /api/v1/reports/top-borrowers:
+    get:
+      tags: [Reports]
+      summary: Usuarios com mais emprestimos e multas pendentes
+      operationId: reportTopBorrowers
+      parameters:
+        - $ref: '#/components/parameters/ReportLimitParam'
+      responses:
+        '200':
+          description: Ranking de usuarios
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BorrowerRanking'
+  /api/v1/reports/low-stock:
+    get:
+      tags: [Reports]
+      summary: Livros fisicos com estoque critico
+      operationId: reportLowStock
+      parameters:
+        - name: threshold
+          in: query
+          description: Limite de estoque (padrao configurado no servidor)
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+      responses:
+        '200':
+          description: Livros com estoque critico
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LowStockBook'
   # ==================================================================
   # SCHEMA
   # ==================================================================
@@ -688,6 +784,15 @@ components:
       schema:
         type: integer
         format: int64
+    ReportLimitParam:
+      name: limit
+      in: query
+      required: false
+      description: Quantidade de linhas do ranking (padrao configurado no servidor)
+      schema:
+        type: integer
+        format: int32
+        minimum: 1
 
   responses:
     BadRequest:
@@ -1247,6 +1352,122 @@ components:
             $ref: '#/components/schemas/Fine'
         meta:
           $ref: '#/components/schemas/PageMeta'
+
+    # ---------- Relatorios ----------
+    LibrarySummary:
+      type: object
+      properties:
+        totalBooks:
+          type: integer
+          format: int64
+        physicalStock:
+          type: integer
+          format: int64
+        lowStockBooks:
+          type: integer
+          format: int64
+        totalUsers:
+          type: integer
+          format: int64
+        activeLoans:
+          type: integer
+          format: int64
+        overdueLoans:
+          type: integer
+          format: int64
+        monthSalesTotal:
+          type: number
+          format: double
+          example: 259.90
+        pendingFines:
+          type: integer
+          format: int64
+        pendingFinesTotal:
+          type: number
+          format: double
+          example: 16.00
+        activeReservations:
+          type: integer
+          format: int64
+    BookRanking:
+      type: object
+      properties:
+        bookId:
+          type: integer
+          format: int64
+        title:
+          type: string
+          example: O Senhor dos Aneis
+        author:
+          type: string
+          example: J. R. R. Tolkien
+        loanCount:
+          type: integer
+          format: int64
+        unitsLoaned:
+          type: integer
+          format: int64
+        openLoans:
+          type: integer
+          format: int64
+    MonthlyLoan:
+      type: object
+      properties:
+        month:
+          type: string
+          example: 2026-09
+        total:
+          type: integer
+          format: int64
+        returned:
+          type: integer
+          format: int64
+        overdue:
+          type: integer
+          format: int64
+    BorrowerRanking:
+      type: object
+      properties:
+        userId:
+          type: integer
+          format: int64
+        name:
+          type: string
+          example: Joao Souza
+        email:
+          type: string
+          example: joao@bookwise.dev
+        loanCount:
+          type: integer
+          format: int64
+        openLoans:
+          type: integer
+          format: int64
+        pendingFineTotal:
+          type: number
+          format: double
+          example: 8.00
+    LowStockBook:
+      type: object
+      properties:
+        bookId:
+          type: integer
+          format: int64
+        title:
+          type: string
+          example: Clean Code
+        author:
+          type: string
+          example: Robert C. Martin
+        stock:
+          type: integer
+          format: int64
+        unitsOnLoan:
+          type: integer
+          format: int64
+        activeReservations:
+          type: integer
+          format: int64
 
     # ---------- Erro ----------
     ErrorResponse:

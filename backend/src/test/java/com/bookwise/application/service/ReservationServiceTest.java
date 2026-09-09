@@ -197,7 +197,8 @@ class ReservationServiceTest {
         BusinessProperties properties = new BusinessProperties(
                 new BusinessProperties.Loan(14, 5, 5, true, 2, 7),
                 new BusinessProperties.Fine(new BigDecimal("2.00")),
-                new BusinessProperties.Reservation(EXPIRATION_DAYS, holdStock));
+                new BusinessProperties.Reservation(EXPIRATION_DAYS, holdStock),
+                new BusinessProperties.Report(3, 7, 5));
         return new ReservationService(
                 reservationRepository,
                 userRepository,

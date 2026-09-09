@@ -101,6 +101,53 @@ export interface Fine {
   paymentDate?: string | null;
 }
 
+export interface LibrarySummary {
+  totalBooks: number;
+  physicalStock: number;
+  lowStockBooks: number;
+  totalUsers: number;
+  activeLoans: number;
+  overdueLoans: number;
+  monthSalesTotal: number;
+  pendingFines: number;
+  pendingFinesTotal: number;
+  activeReservations: number;
+}
+
+export interface BookRanking {
+  bookId: number;
+  title: string;
+  author: string;
+  loanCount: number;
+  unitsLoaned: number;
+  openLoans: number;
+}
+
+export interface MonthlyLoan {
+  month: string;
+  total: number;
+  returned: number;
+  overdue: number;
+}
+
+export interface BorrowerRanking {
+  userId: number;
+  name: string;
+  email: string;
+  loanCount: number;
+  openLoans: number;
+  pendingFineTotal: number;
+}
+
+export interface LowStockBook {
+  bookId: number;
+  title: string;
+  author: string;
+  stock: number;
+  unitsOnLoan: number;
+  activeReservations: number;
+}
+
 export interface PageMeta {
   page: number;
   size: number;

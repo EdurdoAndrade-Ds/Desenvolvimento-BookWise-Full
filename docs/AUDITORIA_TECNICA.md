@@ -311,3 +311,42 @@ frontend: npm run build   -> built (aviso de chunk > 500 kB, pré-existente)
 - Os defaults de negócio adotados (`max-active-per-user: 5`, `max-items-per-loan: 5`,
   `max-renewals: 2`, `renewal-days: 7`, `hold-stock: true`) são **sugestões**
   configuráveis em `application.yml`; ajuste conforme a regra do trabalho.
+
+---
+
+## 11. Relatórios analíticos em SQL nativo (Fase 5)
+
+Antes desta fase o projeto **não tinha nenhuma query nativa**: a persistência usava
+apenas métodos derivados do Spring Data e JPQL, e o dashboard baixava páginas de 500
+livros/empréstimos/vendas para somar tudo no navegador.
+
+| Ponto | Correção aplicada | Status |
+|---|---|---|
+| Agregação no navegador | `DashboardPage` passou a consumir `/api/v1/reports/*`; a única chamada paginada restante é `loans?size=5` (empréstimos recentes) | ✅ feito |
+| Ausência de SQL nativo | `ReportJpaRepository` com `@Query(nativeQuery = true)` usando `JOIN`, `GROUP BY`, `ORDER BY`, `COUNT`, `COUNT(DISTINCT)`, `SUM`, `CASE WHEN`, `COALESCE`, `EXTRACT`, subconsultas correlacionadas e `LIMIT` | ✅ feito |
+| Camadas | projeções em `infrastructure/persistence/projection`, porta `domain/port/ReportRepository`, adapter `ReportRepositoryAdapter`, records de domínio em `domain/model/report`, DTOs + `ReportMapper` e `ReportService` | ✅ feito |
+| Configuração | `bookwise.report.low-stock-threshold` (3), `bookwise.report.history-months` (7) e `bookwise.report.ranking-size` (5) em `BusinessProperties.Report` | ✅ feito |
+| Contrato | tag `Reports`, parâmetro compartilhado `ReportLimitParam` e schemas `LibrarySummary`, `BookRanking`, `MonthlyLoan`, `BorrowerRanking`, `LowStockBook` em `contracts/openapi.yaml` | ✅ feito |
+| Testes | `ReportControllerTest` (5 testes de ponta a ponta em H2/PostgreSQL mode) e `reportsService.test.ts` no frontend | ✅ feito |
+
+Endpoints:
+
+```text
+GET /api/v1/reports/summary                  indicadores consolidados do acervo
+GET /api/v1/reports/top-books?limit=         livros mais emprestados
+GET /api/v1/reports/loans-by-month?months=   série histórica (meses sem movimento zerados)
+GET /api/v1/reports/top-borrowers?limit=     usuários com mais empréstimos + multas pendentes
+GET /api/v1/reports/low-stock?threshold=     estoque crítico (unidades emprestadas e reservas)
+```
+
+**Verificação executada nesta rodada:**
+
+```text
+backend : mvn test          -> Tests run: 77, Failures: 0, Errors: 0  (BUILD SUCCESS)
+frontend: npm run lint      -> 0 erros / 0 warnings
+frontend: npm run format    -> Prettier OK
+frontend: npm run typecheck -> OK
+frontend: npm test          -> 3 arquivos, 9 testes, todos passando
+frontend: npm run build     -> built (aviso de chunk > 500 kB, pré-existente)
+API local (perfil local/H2): os 5 endpoints responderam 200 com dados agregados do seed
+```

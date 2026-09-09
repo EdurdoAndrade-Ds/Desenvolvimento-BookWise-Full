@@ -111,9 +111,27 @@ Modulos puros (sem React) usados por elas: `src/graphics/imageFilters.ts`,
 | Recurso        | URL                                         |
 |----------------|---------------------------------------------|
 | Ping           | GET http://localhost:8080/api/v1/ping       |
+| Relatorios     | GET http://localhost:8080/api/v1/reports/summary |
 | Swagger UI     | http://localhost:8080/swagger-ui.html       |
 | Contrato JSON  | http://localhost:8080/v3/api-docs           |
 | Health         | http://localhost:8080/actuator/health       |
+
+## Relatorios (SQL nativo)
+
+As agregacoes do dashboard sao feitas no banco, com `@Query(nativeQuery = true)` em
+`ReportJpaRepository` (JOIN, GROUP BY, ORDER BY, COUNT/COUNT DISTINCT, SUM, CASE WHEN,
+COALESCE, EXTRACT, subconsultas correlacionadas e LIMIT):
+
+| Endpoint | Conteudo |
+|---|---|
+| `GET /api/v1/reports/summary` | indicadores consolidados (acervo, emprestimos, atrasos, vendas do mes, multas, reservas) |
+| `GET /api/v1/reports/top-books?limit=` | livros mais emprestados |
+| `GET /api/v1/reports/loans-by-month?months=` | serie historica de emprestimos |
+| `GET /api/v1/reports/top-borrowers?limit=` | usuarios com mais emprestimos e multas pendentes |
+| `GET /api/v1/reports/low-stock?threshold=` | estoque critico com unidades emprestadas e reservas ativas |
+
+Defaults configuraveis em `bookwise.report.*` (`low-stock-threshold`, `history-months`,
+`ranking-size`).
 
 ## Pendencias
 

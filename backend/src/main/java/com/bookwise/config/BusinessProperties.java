@@ -17,12 +17,14 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * @param loan        parametros de emprestimo
  * @param fine        parametros de multa
  * @param reservation parametros de reserva
+ * @param report      parametros dos relatorios analiticos
  */
 @ConfigurationProperties(prefix = "bookwise")
 public record BusinessProperties(
         @DefaultValue Loan loan,
         @DefaultValue Fine fine,
-        @DefaultValue Reservation reservation) {
+        @DefaultValue Reservation reservation,
+        @DefaultValue Report report) {
 
     /**
      * Parametros de emprestimo.
@@ -62,5 +64,18 @@ public record BusinessProperties(
     public record Reservation(
             @DefaultValue("7") int defaultExpirationDays,
             @DefaultValue("true") boolean holdStock) {
+    }
+
+    /**
+     * Parametros dos relatorios analiticos.
+     *
+     * @param lowStockThreshold estoque a partir do qual o livro fisico entra na lista de estoque critico
+     * @param historyMonths     quantidade de meses da serie historica de emprestimos
+     * @param rankingSize       quantidade de linhas retornadas pelos rankings
+     */
+    public record Report(
+            @DefaultValue("3") int lowStockThreshold,
+            @DefaultValue("7") int historyMonths,
+            @DefaultValue("5") int rankingSize) {
     }
 }

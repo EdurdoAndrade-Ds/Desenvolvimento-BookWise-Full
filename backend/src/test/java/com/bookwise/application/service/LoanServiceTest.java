@@ -323,7 +323,8 @@ class LoanServiceTest {
                 new BusinessProperties.Loan(
                         DEFAULT_DAYS, MAX_ACTIVE_PER_USER, MAX_ITEMS_PER_LOAN, true, maxRenewals, RENEWAL_DAYS),
                 new BusinessProperties.Fine(new BigDecimal("2.00")),
-                new BusinessProperties.Reservation(7, true));
+                new BusinessProperties.Reservation(7, true),
+                new BusinessProperties.Report(3, 7, 5));
     }
 
     private LoanRequest request(LocalDate dueDate, Long bookId, int quantity) {
