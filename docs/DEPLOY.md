@@ -15,22 +15,18 @@ Para desenvolvimento local:
 - Docker Engine 27 ou superior e Docker Compose, apenas para os modos que usam
   containers.
 
-O frontend usa o registry definido em `frontend/.npmrc`. Em uma rede corporativa,
-defina `ARTIFACTORY_HOST` e `NPM_REPO` no ambiente antes de executar `npm install`.
-O valor esperado usa HTTPS:
-
-```text
-https://${ARTIFACTORY_HOST}/artifactory/api/npm/${NPM_REPO}/
-```
-
+O frontend usa o registry publico por padrao em `frontend/.npmrc`.
+Em uma rede corporativa, sobrescreva temporariamente com `NPM_CONFIG_REGISTRY`
+ou com `npm config set registry ...` antes de instalar dependencias.
 Em um ambiente externo, o build da imagem usa por padrao o registry publico:
 
 ```text
 https://registry.npmjs.org/
 ```
 
-O `Dockerfile` recebe esse valor por `NPM_REGISTRY`; o `.npmrc` do repositorio nao
-precisa ser editado. O build no Render usa o registry publico.
+O `Dockerfile` recebe esse valor por `NPM_REGISTRY`. O build no Render usa o
+registry publico e o frontend nao depende de variaveis `ARTIFACTORY_HOST` ou
+`NPM_REPO`.
 
 ## 2. Execucao local — modo A: backend com H2
 
@@ -253,16 +249,19 @@ requisitos ao manter frontend e API na mesma origem.
 
 ### Falha ao instalar dependencias npm
 
-Em rede corporativa, verifique `ARTIFACTORY_HOST` e `NPM_REPO` e confirme que o
-registry usa HTTPS. Em ambiente externo, nao edite `frontend/.npmrc`; use o
-Dockerfile com o padrao npmjs:
+Em rede corporativa, se necessario, sobrescreva o registry com
+`NPM_CONFIG_REGISTRY=https://${ARTIFACTORY_HOST}/artifactory/api/npm/${NPM_REPO}/`
+antes de executar `npm install`.
+Em ambiente externo, o `frontend/.npmrc` ja aponta para o registry publico; use
+o Dockerfile com o padrao npmjs:
 
 ```bash
 docker build --build-arg NPM_REGISTRY=https://registry.npmjs.org/ -t bookwise:local .
 ```
 
 Se o Artifactory estiver indisponivel, aguarde a rede corporativa ser
-restabelecida em vez de trocar para um host HTTP ou alternativo.
+restabelecida em vez de trocar para um host HTTP ou alternativo. Para o Render,
+deixe o registry publico como padrao e use `npm run prepare:lockfile && npm ci`.
 
 Se o problema acontecer ao publicar o frontend como Static Site no Render,
 configure o servico com `frontend` como raiz do projeto, use Node 20.x e troque
