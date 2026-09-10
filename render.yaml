@@ -9,10 +9,10 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: docker
-      # Origem do site estatico, ex.: https://bookwise-web.onrender.com
+      # Origem do site estatico (sem barra final).
       # Aceita lista separada por virgula e curinga (https://*.onrender.com).
       - key: CORS_ALLOWED_ORIGINS
-        sync: false
+        value: https://desenvolvimento-bookwise-full-1.onrender.com
       - key: DB_URL
         sync: false
       - key: DB_USERNAME

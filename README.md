@@ -47,7 +47,9 @@ O contrato e validado automaticamente a cada build pelo teste `OpenApiContractTe
 ## Como rodar
 
 Para instrucoes completas de execucao local e deploy no Render, consulte
-[docs/DEPLOY.md](docs/DEPLOY.md).
+[docs/DEPLOY.md](docs/DEPLOY.md). Para demonstrar o banco diretamente no
+psql/DBeaver (estrutura, JOINs, agregacoes, relatorios e o UPDATE de desconto),
+use [docs/CONSULTAS_DEMO.sql](docs/CONSULTAS_DEMO.sql).
 
 ### Opcao 1 — Backend local com H2 (sem Docker)
 

@@ -253,10 +253,11 @@ As duas variaveis abaixo ligam os dois servicos:
   VITE_API_URL=https://desenvolvimento-bookwise-full.onrender.com
   ```
 
-- no Web Service, `CORS_ALLOWED_ORIGINS` com a origem do site, ex.:
+- no Web Service, `CORS_ALLOWED_ORIGINS` com a origem do site — no ambiente
+  atual:
 
   ```text
-  CORS_ALLOWED_ORIGINS=https://bookwise-web.onrender.com
+  CORS_ALLOWED_ORIGINS=https://desenvolvimento-bookwise-full-1.onrender.com
   ```
 
   O valor aceita lista separada por virgula e curinga
@@ -274,7 +275,21 @@ Static Site recebe erro de origem no navegador.
 A imagem unica da secao 5 continua sendo o caminho mais simples: frontend e API na
 mesma origem, sem CORS e sem duas variaveis para manter em sincronia.
 
-## 7. Troubleshooting
+## 7. Consultas de demonstracao no banco
+
+Com o Postgres do Render no ar, conecte com a `External Database URL` do painel
+(psql, DBeaver ou pgAdmin) e use `docs/CONSULTAS_DEMO.sql`: estrutura das
+tabelas e historico do Flyway, catalogo com JOIN de categorias, situacao dos
+emprestimos, perfil dos usuarios, hierarquia de categorias com CTE recursiva, os
+relatorios que o dashboard consome (`/api/v1/reports/*`), vendas com funcao de
+janela, o `UPDATE` de desconto do back-office e um exemplo de transacao com
+`ROLLBACK`.
+
+O arquivo nao contem credenciais: informe usuario, host e senha na conexao. Os
+blocos 9 e 10 alteram dados — rode-os em um banco de demonstracao ou dentro de
+uma transacao.
+
+## 8. Troubleshooting
 
 ### Falha ao instalar dependencias npm
 
