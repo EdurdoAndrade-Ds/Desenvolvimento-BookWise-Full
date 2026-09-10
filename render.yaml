@@ -10,6 +10,7 @@ services:
       - key: SPRING_PROFILES_ACTIVE
         value: docker
       # Origem do site estatico, ex.: https://bookwise-web.onrender.com
+      # Aceita lista separada por virgula e curinga (https://*.onrender.com).
       - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: DB_URL
@@ -31,9 +32,9 @@ services:
     buildCommand: npm ci --include=dev && npm run build
     staticPublishPath: ./dist
     envVars:
-      # Origem do servico do backend, ex.: https://bookwise.onrender.com
+      # Origem do servico do backend (sem barra final).
       - key: VITE_API_URL
-        sync: false
+        value: https://desenvolvimento-bookwise-full.onrender.com
     routes:
       # SPA: /adm, /books/1 etc. sao resolvidos pelo React Router.
       - type: rewrite

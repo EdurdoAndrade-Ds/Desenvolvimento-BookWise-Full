@@ -246,10 +246,25 @@ que roda com `NODE_ENV=production`.
 
 As duas variaveis abaixo ligam os dois servicos:
 
-- no Static Site, `VITE_API_URL` com a origem da API,
-  ex.: `https://bookwise.onrender.com` (sem barra final);
-- no Web Service, `CORS_ALLOWED_ORIGINS` com a origem do site,
-  ex.: `https://bookwise-web.onrender.com`.
+- no Static Site, `VITE_API_URL` com a origem da API, sem barra final —
+  no ambiente atual:
+
+  ```text
+  VITE_API_URL=https://desenvolvimento-bookwise-full.onrender.com
+  ```
+
+- no Web Service, `CORS_ALLOWED_ORIGINS` com a origem do site, ex.:
+
+  ```text
+  CORS_ALLOWED_ORIGINS=https://bookwise-web.onrender.com
+  ```
+
+  O valor aceita lista separada por virgula e curinga
+  (`https://*.onrender.com`), porque a configuracao usa
+  `allowedOriginPatterns`.
+
+`VITE_API_URL` e lida em tempo de **build**: depois de alterar a variavel no
+Static Site e preciso disparar um novo deploy para o valor entrar no bundle.
 
 Sem `VITE_API_URL` o frontend continua usando caminhos relativos `/api/...`, o
 que e o comportamento usado em desenvolvimento (proxy do Vite) e na imagem unica.
