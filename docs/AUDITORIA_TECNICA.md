@@ -380,3 +380,30 @@ frontend: npm run typecheck -> OK
 frontend: npm test          -> 4 arquivos, 11 testes, todos passando
 frontend: npm run build     -> built (aviso de chunk > 500 kB, pré-existente)
 ```
+
+---
+
+## 13. Deploy do frontend no Render (Fase 7)
+
+O build do Static Site falhava com `Cannot find module 'react'`, `Cannot find module 'vite'`
+e `JSX.IntrinsicElements` — sintomas de instalação sem dependências, não de erro de código.
+
+| Ponto | Correção aplicada | Status |
+|---|---|---|
+| `package-lock.json` com 402 tarballs apontando para `http://artifactory.santanderbr.corp` | URLs normalizadas para `https://registry.npmjs.org/`; o npm continua substituindo o host pelo registry configurado, então `npm ci` funciona dentro e fora da rede corporativa (validado nos dois casos) | ✅ feito |
+| `frontend/.npmrc` corporativo versionado | removido do controle de versão e adicionado ao `.gitignore`; o registry passa a ser configuração de ambiente | ✅ feito |
+| Frontend sem base URL de API | `http.ts` usa `VITE_API_URL` (vazio = caminhos relativos `/api/...`, como no proxy do Vite e na imagem única) e `src/vite-env.d.ts` tipa a variável | ✅ feito |
+| Backend sem CORS | `CorsConfig` libera `/api/**` para as origens de `bookwise.cors.allowed-origins` (`CORS_ALLOWED_ORIGINS`); vazio = nenhuma regra publicada | ✅ feito |
+| `render.yaml` sem serviço de frontend | novo Static Site `bookwise-web` (`rootDir: frontend`, `npm ci --include=dev && npm run build`, publish `./dist`, rewrite `/* -> /index.html` para o React Router) | ✅ feito |
+| Documentação | `docs/DEPLOY.md` seções 1, 5.1, 6 e 7 reescritas com as duas variáveis e o diagnóstico do erro | ✅ feito |
+
+**Verificação executada nesta rodada:**
+
+```text
+frontend: npm run build     -> built (aviso de chunk > 500 kB, pré-existente)
+frontend: npm run lint      -> 0 erros / 0 warnings
+frontend: npm run typecheck -> OK
+frontend: npm test          -> 4 arquivos, 11 testes, todos passando
+frontend: npm ci em diretorio limpo -> 355 pacotes adicionados
+backend : mvn compile + mvn test -> BUILD SUCCESS
+```

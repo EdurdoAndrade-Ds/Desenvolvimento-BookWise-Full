@@ -27,6 +27,9 @@ management:
 # Parametros de negocio configuraveis (ver com.bookwise.config.BusinessProperties).
 # Valores abaixo sao os padroes; ajuste conforme a politica da biblioteca.
 bookwise:
+  cors:
+    # Origens liberadas quando o frontend roda separado da API (vazio = mesma origem).
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
   loan:
     default-days: 14            # prazo padrao do emprestimo quando nao informado
     max-active-per-user: 5      # emprestimos em aberto por usuario (0 = sem limite)

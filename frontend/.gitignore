@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# Registry corporativo (Artifactory) e especifico de cada ambiente.
+.npmrc
 dist-ssr/
 *.local
 vite.config.js

@@ -15,22 +15,17 @@ Para desenvolvimento local:
 - Docker Engine 27 ou superior e Docker Compose, apenas para os modos que usam
   containers.
 
-O frontend usa o registry definido em `frontend/.npmrc`. Em uma rede corporativa,
-defina `ARTIFACTORY_HOST` e `NPM_REPO` no ambiente antes de executar `npm install`.
-O valor esperado usa HTTPS:
+O `package-lock.json` referencia o registry publico
+(`https://registry.npmjs.org/`), de modo que `npm ci` funciona em qualquer
+ambiente. Em rede corporativa, configure o registry fora do repositorio
+(`~/.npmrc` ou um `frontend/.npmrc` local, que esta no `.gitignore`):
 
 ```text
-https://${ARTIFACTORY_HOST}/artifactory/api/npm/${NPM_REPO}/
+registry=https://${ARTIFACTORY_HOST}/artifactory/api/npm/${NPM_REPO}/
 ```
 
-Em um ambiente externo, o build da imagem usa por padrao o registry publico:
-
-```text
-https://registry.npmjs.org/
-```
-
-O `Dockerfile` recebe esse valor por `NPM_REGISTRY`; o `.npmrc` do repositorio nao
-precisa ser editado. O build no Render usa o registry publico.
+O npm substitui o host dos tarballs pelo registry configurado, entao o mesmo
+lockfile serve para os dois casos.
 
 ## 2. Execucao local — modo A: backend com H2
 
@@ -122,10 +117,9 @@ O `Dockerfile` na raiz possui tres estagios:
    copia o `frontend/dist` para `backend/src/main/resources/static`;
 3. `eclipse-temurin:17-jre-alpine`: executa somente o JAR final.
 
-O lockfile atualmente pode conter URLs de tarballs do Artifactory corporativo. No
-estagio Node, o Dockerfile normaliza essas URLs para o registry escolhido pelo
-argumento `NPM_REGISTRY` dentro da propria camada da imagem, sem alterar arquivos
-do repositorio.
+No estagio Node, o Dockerfile normaliza eventuais URLs de tarballs do Artifactory
+para o registry escolhido pelo argumento `NPM_REGISTRY` dentro da propria camada
+da imagem, sem alterar arquivos do repositorio.
 
 Build usando npmjs:
 
@@ -161,7 +155,8 @@ Em um ambiente que injeta `PORT`, como o Render, esse valor tem precedencia:
 
 ### 5.1. Usando Blueprint
 
-O arquivo `render.yaml` cria um Web Service Docker e um PostgreSQL gerenciado.
+O arquivo `render.yaml` cria um Web Service Docker, um Static Site para o
+frontend (secao 6) e um PostgreSQL gerenciado.
 
 1. Coloque a pasta do projeto em um repositorio ou conecte a origem de codigo
    aceita pelo Render.
@@ -233,29 +228,49 @@ request depois disso pode sofrer cold start. O banco e os limites do plano
 tambem devem ser avaliados antes de uso em producao; o servico pode nao ter
 disponibilidade continua nesse plano.
 
-## 6. Alternativa: static site e Web Service separados
+## 6. Frontend como Static Site separado
 
-Tambem seria possivel publicar o `frontend/dist` como Static Site e a API como
-Web Service separado, mas essa nao e a arquitetura implementada aqui. O frontend
-usa caminhos relativos `/api/...` e nao possui base URL configuravel; o backend
-tambem nao possui configuracao de CORS.
+O `render.yaml` tambem declara o servico estatico `bookwise-web`, que publica o
+`frontend/dist`:
 
-Essa alternativa exigiria:
+```text
+Root Directory:    frontend
+Build Command:     npm ci --include=dev && npm run build
+Publish Directory: ./dist
+Rewrite:           /*  ->  /index.html
+```
 
-1. uma base URL de API configuravel no frontend por ambiente; e
-2. CORS configurado no backend para a origem do Static Site.
+O rewrite e necessario porque as rotas (`/adm`, `/shelf-3d`, ...) sao resolvidas
+pelo React Router. `--include=dev` garante `tsc`, `vite` e os `@types` no build,
+que roda com `NODE_ENV=production`.
 
-Isso permanece como debito tecnico e esta relacionado a infraestrutura parcial
-registrada em [`docs/PENDENCIAS.md`](PENDENCIAS.md). A imagem unica evita ambos os
-requisitos ao manter frontend e API na mesma origem.
+As duas variaveis abaixo ligam os dois servicos:
+
+- no Static Site, `VITE_API_URL` com a origem da API,
+  ex.: `https://bookwise.onrender.com` (sem barra final);
+- no Web Service, `CORS_ALLOWED_ORIGINS` com a origem do site,
+  ex.: `https://bookwise-web.onrender.com`.
+
+Sem `VITE_API_URL` o frontend continua usando caminhos relativos `/api/...`, o
+que e o comportamento usado em desenvolvimento (proxy do Vite) e na imagem unica.
+Sem `CORS_ALLOWED_ORIGINS` o backend nao publica nenhuma regra de CORS, entao o
+Static Site recebe erro de origem no navegador.
+
+A imagem unica da secao 5 continua sendo o caminho mais simples: frontend e API na
+mesma origem, sem CORS e sem duas variaveis para manter em sincronia.
 
 ## 7. Troubleshooting
 
 ### Falha ao instalar dependencias npm
 
-Em rede corporativa, verifique `ARTIFACTORY_HOST` e `NPM_REPO` e confirme que o
-registry usa HTTPS. Em ambiente externo, nao edite `frontend/.npmrc`; use o
-Dockerfile com o padrao npmjs:
+Erros como `Cannot find module 'react'`, `Cannot find module 'vite'` ou
+`JSX.IntrinsicElements` durante o `tsc` indicam que a instalacao nao trouxe as
+dependencias — nao um problema de codigo. Verifique se o registry usado tem
+acesso: em rede corporativa confirme `ARTIFACTORY_HOST`/`NPM_REPO` e HTTPS; fora
+dela, use o registry publico e nao versione um `.npmrc` corporativo (ele esta no
+`.gitignore`), porque o build externo nao alcanca o Artifactory.
+
+No build da imagem, o registry vem do argumento do Dockerfile:
 
 ```bash
 docker build --build-arg NPM_REGISTRY=https://registry.npmjs.org/ -t bookwise:local .
