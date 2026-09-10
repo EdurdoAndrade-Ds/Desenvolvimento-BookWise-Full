@@ -28,6 +28,10 @@ O `Dockerfile` recebe esse valor por `NPM_REGISTRY`. O build no Render usa o
 registry publico e o frontend nao depende de variaveis `ARTIFACTORY_HOST` ou
 `NPM_REPO`.
 
+Para o Render, o frontend fica mais estável com Node 20.18.3 via `frontend/.nvmrc`.
+Se o seu ambiente ainda usar o instalador padrão do npm, prefira o comando de
+instalação `npm ci --ignore-scripts --no-audit --no-fund`.
+
 ## 2. Execucao local — modo A: backend com H2
 
 Este e o modo mais simples para desenvolvimento e demonstracao. O perfil `local`
@@ -264,12 +268,12 @@ restabelecida em vez de trocar para um host HTTP ou alternativo. Para o Render,
 deixe o registry publico como padrao e use `npm run prepare:lockfile && npm ci`.
 
 Se o problema acontecer ao publicar o frontend como Static Site no Render,
-configure o servico com `frontend` como raiz do projeto, use Node 20.x e troque
-o install command para `npm run prepare:lockfile && npm ci`. O script
-reescreve os `resolved` do lockfile para o registry publico antes da instalacao.
-O repositório inclui
-[`frontend/.nvmrc`](../frontend/.nvmrc) e `frontend/package.json` declara a
-faixa suportada em `engines`.
+configure o servico com `frontend` como raiz do projeto, use Node 20.18.3 e
+troque o install command para `npm ci --ignore-scripts --no-audit --no-fund`.
+O script `prepare:lockfile` continua disponivel caso precise reescrever URLs do
+lockfile para um registry corporativo antes de instalar.
+O repositório inclui [`frontend/.nvmrc`](../frontend/.nvmrc) e
+`frontend/package.json` declara a faixa suportada em `engines`.
 
 ### `DB_URL` rejeitada
 
