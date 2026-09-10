@@ -1,0 +1,1 @@
+# Configuracao de teste fica em application-test.yml (ativada via @ActiveProfiles("test")).

@@ -1,0 +1,1227 @@
+openapi: 3.0.3
+info:
+  title: BookWise API
+  description: >-
+    Contrato da API do BookWise - sistema de gestao de bibliotecas e livrarias
+    fisicas e digitais. Este arquivo e o **contrato de referencia (design)** do
+    projeto. Os campos e recursos aqui sao provisorios e serao ajustados quando
+    o MER/DER final for definido.
+
+    Abordagem: code-first. O contrato vivo, gerado a partir das anotacoes do
+    codigo (springdoc), fica em `/v3/api-docs`. Este arquivo serve como guia
+    para o time se basear ao implementar.
+  version: 0.0.1
+  contact:
+    name: Equipe BookWise
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8080
+    description: Ambiente local
+
+tags:
+  - name: Users
+    description: Gestao de usuarios (leitores, bibliotecarios, administradores)
+  - name: Books
+    description: Gestao de livros e estoque (fisico e digital)
+  - name: Loans
+    description: Controle de emprestimos e devolucoes
+  - name: Sales
+    description: Controle de vendas de livros
+  - name: Categories
+    description: Gestao de categorias de livros (com subcategorias)
+  - name: Reservations
+    description: Controle de reservas de livros
+  - name: Fines
+    description: Multas de emprestimos em atraso
+  - name: Schema
+    description: Metadados estruturais do banco de dados
+
+paths:
+  # ==================================================================
+  # SCHEMA
+  # ==================================================================
+  /api/v1/schema:
+    get:
+      tags: [Schema]
+      summary: Inspeciona o schema do banco
+      operationId: inspectSchema
+      description: Retorna metadados via introspeccao JDBC, sem dados de linhas.
+      responses:
+        '200':
+          description: Estrutura do banco
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SchemaResponse'
+  # ==================================================================
+  # CATEGORIES
+  # ==================================================================
+  /api/v1/categories:
+    get:
+      tags: [Categories]
+      summary: Lista categorias
+      operationId: listCategories
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - name: q
+          in: query
+          description: Filtro por nome ou descricao
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pagina de categorias
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryPage'
+    post:
+      tags: [Categories]
+      summary: Cria uma categoria
+      operationId: createCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '201':
+          description: Categoria criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/categories/all:
+    get:
+      tags: [Categories]
+      summary: Lista todas as categorias (sem paginacao)
+      operationId: listAllCategories
+      responses:
+        '200':
+          description: Lista de categorias
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
+
+  /api/v1/categories/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    get:
+      tags: [Categories]
+      summary: Busca categoria por id
+      operationId: getCategoryById
+      responses:
+        '200':
+          description: Categoria encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Categories]
+      summary: Atualiza uma categoria
+      operationId: updateCategory
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CategoryRequest'
+      responses:
+        '200':
+          description: Categoria atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Categories]
+      summary: Remove uma categoria
+      operationId: deleteCategory
+      responses:
+        '204':
+          description: Categoria removida
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================================================================
+  # RESERVATIONS
+  # ==================================================================
+  /api/v1/reservations:
+    get:
+      tags: [Reservations]
+      summary: Lista reservas
+      operationId: listReservations
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Pagina de reservas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReservationPage'
+    post:
+      tags: [Reservations]
+      summary: Registra uma reserva
+      operationId: createReservation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReservationRequest'
+      responses:
+        '201':
+          description: Reserva registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/reservations/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    get:
+      tags: [Reservations]
+      summary: Busca reserva por id
+      operationId: getReservationById
+      responses:
+        '200':
+          description: Reserva encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/reservations/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    post:
+      tags: [Reservations]
+      summary: Cancela uma reserva
+      operationId: cancelReservation
+      responses:
+        '200':
+          description: Reserva cancelada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================================================================
+  # FINES
+  # ==================================================================
+  /api/v1/fines:
+    get:
+      tags: [Fines]
+      summary: Lista multas
+      operationId: listFines
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Pagina de multas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FinePage'
+
+  /api/v1/fines/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    get:
+      tags: [Fines]
+      summary: Busca multa por id
+      operationId: getFineById
+      responses:
+        '200':
+          description: Multa encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fine'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/fines/{id}/pay:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    post:
+      tags: [Fines]
+      summary: Registra o pagamento de uma multa
+      operationId: payFine
+      responses:
+        '200':
+          description: Multa paga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fine'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================================================================
+  # USERS
+  # ==================================================================
+  /api/v1/users:
+    get:
+      tags: [Users]
+      summary: Lista usuarios
+      operationId: listUsers
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - name: q
+          in: query
+          description: Filtro por nome ou email
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pagina de usuarios
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserPage'
+    post:
+      tags: [Users]
+      summary: Cria um usuario
+      operationId: createUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '201':
+          description: Usuario criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/users/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    get:
+      tags: [Users]
+      summary: Busca usuario por id
+      operationId: getUserById
+      responses:
+        '200':
+          description: Usuario encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Users]
+      summary: Atualiza um usuario
+      operationId: updateUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRequest'
+      responses:
+        '200':
+          description: Usuario atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Users]
+      summary: Remove um usuario
+      operationId: deleteUser
+      responses:
+        '204':
+          description: Usuario removido
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================================================================
+  # BOOKS
+  # ==================================================================
+  /api/v1/books:
+    get:
+      tags: [Books]
+      summary: Lista livros
+      operationId: listBooks
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - name: q
+          in: query
+          description: Filtro por titulo, autor ou ISBN
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Pagina de livros
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookPage'
+    post:
+      tags: [Books]
+      summary: Cria um livro
+      operationId: createBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookRequest'
+      responses:
+        '201':
+          description: Livro criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/books/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    get:
+      tags: [Books]
+      summary: Busca livro por id
+      operationId: getBookById
+      responses:
+        '200':
+          description: Livro encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    put:
+      tags: [Books]
+      summary: Atualiza um livro
+      operationId: updateBook
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookRequest'
+      responses:
+        '200':
+          description: Livro atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [Books]
+      summary: Remove um livro
+      operationId: deleteBook
+      responses:
+        '204':
+          description: Livro removido
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================================================================
+  # LOANS
+  # ==================================================================
+  /api/v1/loans:
+    get:
+      tags: [Loans]
+      summary: Lista emprestimos
+      operationId: listLoans
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Pagina de emprestimos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoanPage'
+    post:
+      tags: [Loans]
+      summary: Registra um emprestimo
+      operationId: createLoan
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoanRequest'
+      responses:
+        '201':
+          description: Emprestimo registrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/loans/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    get:
+      tags: [Loans]
+      summary: Busca emprestimo por id
+      operationId: getLoanById
+      responses:
+        '200':
+          description: Emprestimo encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/loans/{id}/return:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    post:
+      tags: [Loans]
+      summary: Registra a devolucao de um emprestimo
+      operationId: returnLoan
+      responses:
+        '200':
+          description: Devolucao registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ==================================================================
+  # SALES
+  # ==================================================================
+  /api/v1/sales:
+    get:
+      tags: [Sales]
+      summary: Lista vendas
+      operationId: listSales
+      parameters:
+        - $ref: '#/components/parameters/PageParam'
+        - $ref: '#/components/parameters/SizeParam'
+        - $ref: '#/components/parameters/UserIdParam'
+      responses:
+        '200':
+          description: Pagina de vendas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SalePage'
+    post:
+      tags: [Sales]
+      summary: Registra uma venda
+      operationId: createSale
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SaleRequest'
+      responses:
+        '201':
+          description: Venda registrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sale'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /api/v1/sales/{id}:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    get:
+      tags: [Sales]
+      summary: Busca venda por id
+      operationId: getSaleById
+      responses:
+        '200':
+          description: Venda encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sale'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/sales/{id}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    post:
+      tags: [Sales]
+      summary: Cancela uma venda
+      operationId: cancelSale
+      responses:
+        '200':
+          description: Venda cancelada (estoque restaurado)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sale'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      description: Identificador do recurso
+      schema:
+        type: integer
+        format: int64
+    PageParam:
+      name: page
+      in: query
+      description: Numero da pagina (base 0)
+      schema:
+        type: integer
+        format: int32
+        default: 0
+        minimum: 0
+    SizeParam:
+      name: size
+      in: query
+      description: Quantidade de itens por pagina
+      schema:
+        type: integer
+        format: int32
+        default: 20
+        minimum: 1
+        maximum: 100
+    UserIdParam:
+      name: userId
+      in: query
+      required: false
+      description: Filtra os registros pelo identificador do usuario
+      schema:
+        type: integer
+        format: int64
+
+  responses:
+    BadRequest:
+      description: Requisicao invalida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Recurso nao encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+
+  schemas:
+    SchemaResponse:
+      type: object
+      required: [database, tables]
+      properties:
+        database:
+          $ref: '#/components/schemas/SchemaDatabase'
+        tables:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchemaTable'
+    SchemaDatabase:
+      type: object
+      required: [productName, productVersion, schemaName]
+      properties:
+        productName:
+          type: string
+        productVersion:
+          type: string
+        schemaName:
+          type: string
+    SchemaTable:
+      type: object
+      required: [name, columns, primaryKey, foreignKeys, uniqueConstraints]
+      properties:
+        name:
+          type: string
+        columns:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchemaColumn'
+        primaryKey:
+          type: array
+          items:
+            type: string
+        foreignKeys:
+          type: array
+          items:
+            $ref: '#/components/schemas/SchemaForeignKey'
+        uniqueConstraints:
+          type: array
+          items:
+            type: string
+    SchemaColumn:
+      type: object
+      required: [name, type, nullable, primaryKey, autoIncrement, unique]
+      properties:
+        name:
+          type: string
+        type:
+          type: string
+        size:
+          type: integer
+          format: int32
+          nullable: true
+        nullable:
+          type: boolean
+        primaryKey:
+          type: boolean
+        autoIncrement:
+          type: boolean
+        unique:
+          type: boolean
+    SchemaForeignKey:
+      type: object
+      required: [name, column, referencedTable, referencedColumn]
+      properties:
+        name:
+          type: string
+        column:
+          type: string
+        referencedTable:
+          type: string
+        referencedColumn:
+          type: string
+    # ---------- Enums ----------
+    UserRole:
+      type: string
+      description: Perfil do usuario
+      enum: [ADMIN, LIBRARIAN, READER]
+    BookFormat:
+      type: string
+      description: Formato do livro
+      enum: [PHYSICAL, DIGITAL]
+    LoanStatus:
+      type: string
+      description: Situacao do emprestimo
+      enum: [ACTIVE, RETURNED, LATE]
+    SaleStatus:
+      type: string
+      description: Situacao da venda
+      enum: [PENDING, PAID, CANCELLED]
+    ReservationStatus:
+      type: string
+      description: Situacao da reserva
+      enum: [ACTIVE, FULFILLED, CANCELLED, EXPIRED]
+    FinePaymentStatus:
+      type: string
+      description: Situacao de pagamento da multa
+      enum: [PENDING, PAID]
+
+    # ---------- User ----------
+    UserRequest:
+      type: object
+      required: [name, email, role]
+      properties:
+        name:
+          type: string
+          example: Maria Silva
+        email:
+          type: string
+          format: email
+          example: maria@bookwise.com
+        role:
+          $ref: '#/components/schemas/UserRole'
+    User:
+      allOf:
+        - $ref: '#/components/schemas/UserRequest'
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 1
+            createdAt:
+              type: string
+              format: date-time
+
+    # ---------- Book ----------
+    BookRequest:
+      type: object
+      required: [title, author, isbn, format]
+      properties:
+        title:
+          type: string
+          example: Clean Code
+        author:
+          type: string
+          example: Robert C. Martin
+        isbn:
+          type: string
+          example: "9780132350884"
+        genre:
+          type: string
+          maxLength: 50
+          example: Tecnologia
+        publishedYear:
+          type: integer
+          format: int32
+          example: 2008
+        format:
+          $ref: '#/components/schemas/BookFormat'
+        price:
+          type: number
+          format: double
+          example: 89.90
+        stock:
+          type: integer
+          format: int32
+          description: Quantidade em estoque (para livros fisicos)
+          example: 10
+        categoryIds:
+          type: array
+          description: Ids das categorias associadas (N:N)
+          items:
+            type: integer
+            format: int64
+          example: [1, 4]
+    Book:
+      allOf:
+        - $ref: '#/components/schemas/BookRequest'
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 1
+            categories:
+              type: array
+              description: Categorias associadas ao livro
+              items:
+                $ref: '#/components/schemas/CategoryRef'
+            createdAt:
+              type: string
+              format: date-time
+    CategoryRef:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+          example: Tecnologia
+
+    # ---------- Loan ----------
+    LoanItemRequest:
+      type: object
+      required: [bookId]
+      properties:
+        bookId:
+          type: integer
+          format: int64
+          example: 1
+        quantity:
+          type: integer
+          format: int32
+          minimum: 1
+          default: 1
+          example: 1
+    LoanRequest:
+      type: object
+      required: [userId, items]
+      properties:
+        userId:
+          type: integer
+          format: int64
+          example: 1
+        dueDate:
+          type: string
+          format: date
+          description: "Data prevista de devolucao (padrao: hoje + 14 dias)"
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/LoanItemRequest'
+    LoanItem:
+      type: object
+      properties:
+        bookId:
+          type: integer
+          format: int64
+        bookTitle:
+          type: string
+          example: Clean Code
+        quantity:
+          type: integer
+          format: int32
+          example: 1
+    Loan:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        userId:
+          type: integer
+          format: int64
+        userName:
+          type: string
+          example: Maria Silva
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/LoanItem'
+        loanDate:
+          type: string
+          format: date
+        dueDate:
+          type: string
+          format: date
+        returnDate:
+          type: string
+          format: date
+          nullable: true
+        status:
+          $ref: '#/components/schemas/LoanStatus'
+
+    # ---------- Sale ----------
+    SaleItemRequest:
+      type: object
+      required: [bookId]
+      properties:
+        bookId:
+          type: integer
+          format: int64
+          example: 1
+        quantity:
+          type: integer
+          format: int32
+          minimum: 1
+          default: 1
+          example: 1
+        unitPrice:
+          type: number
+          format: double
+          description: "Preco unitario praticado (padrao: preco do livro)"
+          example: 89.90
+    SaleRequest:
+      type: object
+      required: [userId, items]
+      properties:
+        userId:
+          type: integer
+          format: int64
+          example: 1
+        paymentMethod:
+          type: string
+          example: PIX
+        items:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/SaleItemRequest'
+    SaleItem:
+      type: object
+      properties:
+        bookId:
+          type: integer
+          format: int64
+        bookTitle:
+          type: string
+          example: Clean Code
+        quantity:
+          type: integer
+          format: int32
+          example: 1
+        unitPrice:
+          type: number
+          format: double
+          example: 89.90
+    Sale:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        userId:
+          type: integer
+          format: int64
+        userName:
+          type: string
+          example: Maria Silva
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/SaleItem'
+        paymentMethod:
+          type: string
+          example: PIX
+        saleDate:
+          type: string
+          format: date
+        totalPrice:
+          type: number
+          format: double
+          example: 89.90
+        status:
+          $ref: '#/components/schemas/SaleStatus'
+
+    # ---------- Category ----------
+    CategoryRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          maxLength: 80
+          example: Tecnologia
+        description:
+          type: string
+          maxLength: 200
+          example: Livros de TI e programacao
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+          description: Categoria pai (para subcategorias)
+    Category:
+      allOf:
+        - $ref: '#/components/schemas/CategoryRequest'
+        - type: object
+          properties:
+            id:
+              type: integer
+              format: int64
+              example: 1
+            parentName:
+              type: string
+              nullable: true
+              example: Nao-Ficcao
+            createdAt:
+              type: string
+              format: date-time
+
+    # ---------- Paginacao ----------
+    PageMeta:
+      type: object
+      properties:
+        page:
+          type: integer
+          format: int32
+        size:
+          type: integer
+          format: int32
+        totalElements:
+          type: integer
+          format: int64
+        totalPages:
+          type: integer
+          format: int32
+    UserPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    BookPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Book'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    LoanPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Loan'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    SalePage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sale'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+    CategoryPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+
+    # ---------- Reservation ----------
+    ReservationRequest:
+      type: object
+      required: [userId, bookId]
+      properties:
+        userId:
+          type: integer
+          format: int64
+          example: 1
+        bookId:
+          type: integer
+          format: int64
+          example: 1
+        expirationDate:
+          type: string
+          format: date
+          description: "Data de expiracao (padrao: hoje + 7 dias)"
+    Reservation:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int64
+        userName:
+          type: string
+          example: Joao Souza
+        bookId:
+          type: integer
+          format: int64
+        bookTitle:
+          type: string
+          example: O Senhor dos Aneis
+        reserveDate:
+          type: string
+          format: date
+        expirationDate:
+          type: string
+          format: date
+        status:
+          $ref: '#/components/schemas/ReservationStatus'
+    ReservationPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reservation'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+
+    # ---------- Fine ----------
+    Fine:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        loanId:
+          type: integer
+          format: int64
+        userName:
+          type: string
+          example: Bruno Bibliotecario
+        value:
+          type: number
+          format: double
+          example: 8.00
+        daysLate:
+          type: integer
+          format: int32
+          example: 4
+        paymentStatus:
+          $ref: '#/components/schemas/FinePaymentStatus'
+        paymentDate:
+          type: string
+          format: date
+          nullable: true
+    FinePage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Fine'
+        meta:
+          $ref: '#/components/schemas/PageMeta'
+
+    # ---------- Erro ----------
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+          format: int32
+          example: 400
+        error:
+          type: string
+          example: Bad Request
+        message:
+          type: string
+          example: O campo 'email' e obrigatorio
+        path:
+          type: string
+          example: /api/v1/users
