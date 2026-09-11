@@ -1,0 +1,16 @@
+# Contexto do build da imagem unica (Dockerfile da raiz).
+# Mantem o contexto enxuto: o Dockerfile reconstroi frontend e backend do zero.
+.git/
+.gitignore
+*.md
+docs/
+.idea/
+*.iml
+.vscode/
+
+# Backend
+backend/target/
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
