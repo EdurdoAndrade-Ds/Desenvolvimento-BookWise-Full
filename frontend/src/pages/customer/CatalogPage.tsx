@@ -29,11 +29,7 @@ export default function CatalogPage() {
       });
       setData(result);
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : 'Não foi possível carregar o catálogo.',
-      );
+      setError(err instanceof ApiError ? err.message : 'Não foi possível carregar o catálogo.');
     } finally {
       setLoading(false);
     }
@@ -41,7 +37,10 @@ export default function CatalogPage() {
 
   useEffect(() => {
     void load();
-    categoriesService.listAll().then(setCategories).catch(() => setCategories([]));
+    categoriesService
+      .listAll()
+      .then(setCategories)
+      .catch(() => setCategories([]));
   }, [load]);
 
   useEffect(() => {
@@ -58,9 +57,7 @@ export default function CatalogPage() {
   };
 
   const visibleBooks = data?.content.filter(
-    (book) =>
-      !category ||
-      book.categories?.some((item) => item.id === Number(category)),
+    (book) => !category || book.categories?.some((item) => item.id === Number(category)),
   );
   const meta = data?.meta;
 
@@ -70,9 +67,7 @@ export default function CatalogPage() {
         <p className="mb-2 text-sm font-medium uppercase tracking-widest text-brand-100">
           Portal do cliente
         </p>
-        <h1 className="text-3xl font-bold sm:text-4xl">
-          Encontre sua próxima leitura
-        </h1>
+        <h1 className="text-3xl font-bold sm:text-4xl">Encontre sua próxima leitura</h1>
         <p className="mt-3 max-w-2xl text-brand-100">
           Explore o acervo BookWise e reserve, empreste ou compre seus livros favoritos.
         </p>

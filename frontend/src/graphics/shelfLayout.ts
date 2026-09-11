@@ -87,8 +87,8 @@ export function buildShelfLayout(books: Book[]): ShelfLayout {
   for (const book of books) {
     const candidate = [...current, book];
     if (
-      current.length > 0
-      && (candidate.length > BOOKS_PER_SHELF || rowWidth(candidate) > SHELF_INNER_WIDTH)
+      current.length > 0 &&
+      (candidate.length > BOOKS_PER_SHELF || rowWidth(candidate) > SHELF_INNER_WIDTH)
     ) {
       rows.push(current);
       current = [book];
@@ -98,10 +98,7 @@ export function buildShelfLayout(books: Book[]): ShelfLayout {
   }
   if (current.length > 0 || rows.length === 0) rows.push(current);
 
-  const boardWidth = Math.max(
-    MIN_BOARD_WIDTH,
-    ...rows.map((row) => rowWidth(row) + BOARD_MARGIN),
-  );
+  const boardWidth = Math.max(MIN_BOARD_WIDTH, ...rows.map((row) => rowWidth(row) + BOARD_MARGIN));
 
   rows.forEach((row, shelfIndex) => {
     const boardY = shelfIndex * -SHELF_SPACING;

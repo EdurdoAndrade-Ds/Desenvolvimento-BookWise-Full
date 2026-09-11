@@ -6,6 +6,7 @@ import { ApiError } from '../services/http';
 import { formatDate } from '../lib/format';
 import { LOAN_STATUS_LABELS, LOAN_STATUS_STYLES } from '../lib/loanStatus';
 import LoanFormModal from '../components/LoanFormModal';
+import { useFeedback } from '../feedback/useFeedback';
 
 const PAGE_SIZE = 8;
 
@@ -15,6 +16,7 @@ export default function LoansPage() {
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [showModal, setShowModal] = useState(false);
+  const { confirm, notify } = useFeedback();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -37,12 +39,18 @@ export default function LoansPage() {
   }, [load]);
 
   const handleReturn = async (loan: Loan) => {
-    if (!window.confirm(`Confirmar devolução do empréstimo #${loan.id}?`)) return;
+    const confirmed = await confirm({
+      title: `Confirmar devolução do empréstimo #${loan.id}?`,
+      message: 'O estoque dos itens físicos será restaurado.',
+      confirmLabel: 'Devolver',
+    });
+    if (!confirmed) return;
     try {
       await loansService.return(loan.id);
       await load();
+      notify(`Devolução do empréstimo #${loan.id} registrada.`);
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : 'Erro ao registrar devolução.');
+      notify(err instanceof ApiError ? err.message : 'Erro ao registrar devolução.', 'error');
     }
   };
 

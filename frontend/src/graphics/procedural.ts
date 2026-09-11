@@ -64,8 +64,7 @@ function coordinateHash(x: number, y: number, seed: number): number {
 }
 
 function hslToRgb(color: HslColor): [number, number, number] {
-  const hue = ((color.h % COLOR_HUE_RANGE) + COLOR_HUE_RANGE) % COLOR_HUE_RANGE
-    / COLOR_HUE_RANGE;
+  const hue = (((color.h % COLOR_HUE_RANGE) + COLOR_HUE_RANGE) % COLOR_HUE_RANGE) / COLOR_HUE_RANGE;
   const saturation = color.s / PERCENT_MAX;
   const lightness = color.l / PERCENT_MAX;
   const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
@@ -133,11 +132,7 @@ export function valueNoise2D(x: number, y: number, seed: number): number {
   const y0 = Math.floor(y);
   const xFraction = smoothstep(x - x0);
   const yFraction = smoothstep(y - y0);
-  const top = lerp(
-    coordinateHash(x0, y0, seed),
-    coordinateHash(x0 + 1, y0, seed),
-    xFraction,
-  );
+  const top = lerp(coordinateHash(x0, y0, seed), coordinateHash(x0 + 1, y0, seed), xFraction);
   const bottom = lerp(
     coordinateHash(x0, y0 + 1, seed),
     coordinateHash(x0 + 1, y0 + 1, seed),
@@ -201,14 +196,9 @@ export function generateCoverImageData(
     const vertical = height === 1 ? 0 : y / (height - 1);
     for (let x = 0; x < width; x += 1) {
       const horizontal = width === 1 ? 0 : x / (width - 1);
-      const noise = fractalNoise2D(
-        x * NOISE_SCALE,
-        y * NOISE_SCALE,
-        seed,
-      );
-      const lightness = baseColor.l
-        + (noise - HALF) * NOISE_CONTRAST
-        + (HALF - vertical) * GRADIENT_CONTRAST;
+      const noise = fractalNoise2D(x * NOISE_SCALE, y * NOISE_SCALE, seed);
+      const lightness =
+        baseColor.l + (noise - HALF) * NOISE_CONTRAST + (HALF - vertical) * GRADIENT_CONTRAST;
       const color = hslToRgb({
         h: baseColor.h + horizontal * HUE_DRIFT,
         s: baseColor.s,

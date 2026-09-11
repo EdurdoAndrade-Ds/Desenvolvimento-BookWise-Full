@@ -43,10 +43,7 @@ export default function AppLayout() {
       {/* Sidebar mobile (overlay) */}
       {mobileOpen && (
         <div className="fixed inset-0 z-40 lg:hidden">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setMobileOpen(false)}
-          />
+          <div className="absolute inset-0 bg-black/50" onClick={() => setMobileOpen(false)} />
           <div className="absolute inset-y-0 left-0">
             <Sidebar
               collapsed={false}

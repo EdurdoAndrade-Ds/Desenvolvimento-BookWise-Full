@@ -1,5 +1,5 @@
 import { http } from './http';
-import type { Reservation, Page } from '../types/api';
+import type { Loan, Reservation, Page } from '../types/api';
 
 export interface ReservationInput {
   userId: number;
@@ -29,6 +29,8 @@ export const reservationsService = {
   getById: (id: number) => http.get<Reservation>(`/api/v1/reservations/${id}`),
 
   create: (input: ReservationInput) => http.post<Reservation>('/api/v1/reservations', input),
+
+  convertToLoan: (id: number) => http.post<Loan>(`/api/v1/reservations/${id}/convert`, {}),
 
   cancel: (id: number) => http.post<Reservation>(`/api/v1/reservations/${id}/cancel`, {}),
 };

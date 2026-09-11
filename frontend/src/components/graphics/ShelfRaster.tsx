@@ -43,10 +43,7 @@ interface HitRegion {
 function elevationViewport(layout: ShelfLayout, width: number, height: number): Viewport {
   const worldWidth = layout.width;
   const worldHeight = layout.topY - layout.bottomY;
-  const scale = Math.min(
-    (width - PADDING * 2) / worldWidth,
-    (height - PADDING * 2) / worldHeight,
-  );
+  const scale = Math.min((width - PADDING * 2) / worldWidth, (height - PADDING * 2) / worldHeight);
   return {
     scale,
     offsetX: width / 2,
@@ -233,11 +230,12 @@ export default function ShelfRaster({
       context.setTransform(ratio, 0, 0, ratio, 0, 0);
       context.fillStyle = BACKGROUND;
       context.fillRect(0, 0, width, height);
-      regionsRef.current = layout.books.length === 0
-        ? []
-        : dimension === '2d'
-          ? drawElevation(context, layout, width, height, selectedBookId)
-          : drawSignal(context, layout, width, height, selectedBookId);
+      regionsRef.current =
+        layout.books.length === 0
+          ? []
+          : dimension === '2d'
+            ? drawElevation(context, layout, width, height, selectedBookId)
+            : drawSignal(context, layout, width, height, selectedBookId);
     };
 
     render();
@@ -253,10 +251,10 @@ export default function ShelfRaster({
     const y = event.clientY - bounds.top;
     const hit = regionsRef.current.find(
       (region) =>
-        x >= region.x
-        && x <= region.x + region.width
-        && y >= region.y
-        && y <= region.y + region.height,
+        x >= region.x &&
+        x <= region.x + region.width &&
+        y >= region.y &&
+        y <= region.y + region.height,
     );
     if (hit) onSelect(hit.entry);
   };
@@ -268,9 +266,7 @@ export default function ShelfRaster({
       className="h-full w-full cursor-pointer"
       role="img"
       aria-label={
-        dimension === '2d'
-          ? 'Elevacao 2D da estante em canvas'
-          : 'Sinal 1D do acervo em canvas'
+        dimension === '2d' ? 'Elevacao 2D da estante em canvas' : 'Sinal 1D do acervo em canvas'
       }
     />
   );

@@ -15,14 +15,18 @@ export default function BookCard({ book }: { book: Book }) {
       </div>
       <div className="space-y-2 p-5">
         <div>
-          <h2 className="line-clamp-1 font-semibold text-slate-800 dark:text-slate-100">{book.title}</h2>
+          <h2 className="line-clamp-1 font-semibold text-slate-800 dark:text-slate-100">
+            {book.title}
+          </h2>
           <p className="text-sm text-slate-500 dark:text-slate-400">{book.author}</p>
         </div>
         <div className="flex items-center justify-between gap-2">
           <span className="font-semibold text-brand-700 dark:text-brand-400">
             {book.price !== undefined ? formatCurrency(book.price) : 'Preço sob consulta'}
           </span>
-          <span className={`text-xs font-medium ${available ? 'text-emerald-600' : 'text-red-500'}`}>
+          <span
+            className={`text-xs font-medium ${available ? 'text-emerald-600' : 'text-red-500'}`}
+          >
             {available ? 'Disponível' : 'Esgotado'}
           </span>
         </div>

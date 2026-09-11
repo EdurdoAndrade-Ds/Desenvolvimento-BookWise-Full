@@ -4,6 +4,7 @@ import type { Category, Page } from '../types/api';
 import { categoriesService } from '../services/categoriesService';
 import { ApiError } from '../services/http';
 import CategoryFormModal from '../components/CategoryFormModal';
+import { useFeedback } from '../feedback/useFeedback';
 
 const PAGE_SIZE = 8;
 
@@ -16,6 +17,7 @@ export default function CategoriesPage() {
   const [page, setPage] = useState(0);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState<Category | null>(null);
+  const { confirm, notify } = useFeedback();
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -46,12 +48,18 @@ export default function CategoriesPage() {
   }, [search]);
 
   const handleDelete = async (category: Category) => {
-    if (!window.confirm(`Remover a categoria "${category.name}"?`)) return;
+    const confirmed = await confirm({
+      title: `Remover a categoria "${category.name}"?`,
+      confirmLabel: 'Remover',
+      tone: 'danger',
+    });
+    if (!confirmed) return;
     try {
       await categoriesService.remove(category.id);
       await load();
+      notify(`Categoria "${category.name}" removida.`);
     } catch (err) {
-      alert(err instanceof ApiError ? err.message : 'Erro ao remover a categoria.');
+      notify(err instanceof ApiError ? err.message : 'Erro ao remover a categoria.', 'error');
     }
   };
 
@@ -183,11 +191,7 @@ export default function CategoriesPage() {
       )}
 
       {modalOpen && (
-        <CategoryFormModal
-          category={editing}
-          onClose={() => setModalOpen(false)}
-          onSaved={load}
-        />
+        <CategoryFormModal category={editing} onClose={() => setModalOpen(false)} onSaved={load} />
       )}
     </div>
   );

@@ -3,11 +3,8 @@ import type { Loan } from '../../types/api';
 import { loansService } from '../../services/loansService';
 import { ApiError } from '../../services/http';
 import { formatDate } from '../../lib/format';
-import { useCurrentCustomer } from '../../context/CurrentCustomerContext';
-import {
-  LOAN_STATUS_LABELS,
-  LOAN_STATUS_STYLES,
-} from '../../lib/loanStatus';
+import { useCurrentCustomer } from '../../context/useCurrentCustomer';
+import { LOAN_STATUS_LABELS, LOAN_STATUS_STYLES } from '../../lib/loanStatus';
 
 export default function MyLoansPage() {
   const { customer } = useCurrentCustomer();
@@ -21,9 +18,7 @@ export default function MyLoansPage() {
       setItems(data.content);
     } catch (err) {
       setError(
-        err instanceof ApiError
-          ? err.message
-          : 'Não foi possível carregar seus empréstimos.',
+        err instanceof ApiError ? err.message : 'Não foi possível carregar seus empréstimos.',
       );
     }
   }, [customer]);
@@ -110,8 +105,6 @@ function ErrorMessage({ message }: { message: string }) {
 
 function EmptyMessage({ message }: { message: string }) {
   return (
-    <p className="rounded-xl border border-dashed p-10 text-center text-slate-500">
-      {message}
-    </p>
+    <p className="rounded-xl border border-dashed p-10 text-center text-slate-500">{message}</p>
   );
 }

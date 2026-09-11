@@ -25,16 +25,10 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex gap-2 border-b border-slate-200 dark:border-slate-800">
-        <TabButton
-          active={tab === 'appearance'}
-          onClick={() => setTab('appearance')}
-        >
+        <TabButton active={tab === 'appearance'} onClick={() => setTab('appearance')}>
           Aparência
         </TabButton>
-        <TabButton
-          active={tab === 'database'}
-          onClick={() => setTab('database')}
-        >
+        <TabButton active={tab === 'database'} onClick={() => setTab('database')}>
           Banco de dados
         </TabButton>
       </div>

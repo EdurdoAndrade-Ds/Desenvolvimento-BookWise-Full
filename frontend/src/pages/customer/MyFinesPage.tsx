@@ -3,11 +3,8 @@ import type { Fine } from '../../types/api';
 import { finesService } from '../../services/finesService';
 import { ApiError } from '../../services/http';
 import { formatCurrency, formatDate } from '../../lib/format';
-import { useCurrentCustomer } from '../../context/CurrentCustomerContext';
-import {
-  FINE_STATUS_LABELS,
-  FINE_STATUS_STYLES,
-} from '../../lib/fineStatus';
+import { useCurrentCustomer } from '../../context/useCurrentCustomer';
+import { FINE_STATUS_LABELS, FINE_STATUS_STYLES } from '../../lib/fineStatus';
 
 export default function MyFinesPage() {
   const { customer } = useCurrentCustomer();
@@ -20,11 +17,7 @@ export default function MyFinesPage() {
       const data = await finesService.list({ userId: customer.id, size: 100 });
       setItems(data.content);
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : 'Não foi possível carregar suas multas.',
-      );
+      setError(err instanceof ApiError ? err.message : 'Não foi possível carregar suas multas.');
     }
   }, [customer]);
 
@@ -39,11 +32,7 @@ export default function MyFinesPage() {
       await finesService.pay(fine.id);
       await load();
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : 'Não foi possível registrar o pagamento.',
-      );
+      setError(err instanceof ApiError ? err.message : 'Não foi possível registrar o pagamento.');
     }
   };
 
@@ -110,13 +99,7 @@ export default function MyFinesPage() {
   );
 }
 
-function CustomerPage({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+function CustomerPage({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{title}</h1>
@@ -139,8 +122,6 @@ function ErrorMessage({ message }: { message: string }) {
 
 function EmptyMessage({ message }: { message: string }) {
   return (
-    <p className="rounded-xl border border-dashed p-10 text-center text-slate-500">
-      {message}
-    </p>
+    <p className="rounded-xl border border-dashed p-10 text-center text-slate-500">{message}</p>
   );
 }

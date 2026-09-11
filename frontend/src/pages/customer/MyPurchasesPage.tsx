@@ -3,11 +3,8 @@ import type { Sale } from '../../types/api';
 import { salesService } from '../../services/salesService';
 import { ApiError } from '../../services/http';
 import { formatCurrency, formatDate } from '../../lib/format';
-import { useCurrentCustomer } from '../../context/CurrentCustomerContext';
-import {
-  SALE_STATUS_LABELS,
-  SALE_STATUS_STYLES,
-} from '../../lib/saleStatus';
+import { useCurrentCustomer } from '../../context/useCurrentCustomer';
+import { SALE_STATUS_LABELS, SALE_STATUS_STYLES } from '../../lib/saleStatus';
 
 export default function MyPurchasesPage() {
   const { customer } = useCurrentCustomer();
@@ -20,11 +17,7 @@ export default function MyPurchasesPage() {
       const data = await salesService.list({ userId: customer.id, size: 100 });
       setItems(data.content);
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : 'Não foi possível carregar suas compras.',
-      );
+      setError(err instanceof ApiError ? err.message : 'Não foi possível carregar suas compras.');
     }
   }, [customer]);
 
@@ -69,9 +62,7 @@ export default function MyPurchasesPage() {
                 <h2 className="font-semibold text-slate-800 dark:text-slate-100">
                   {item.items.map((book) => book.bookTitle).join(', ')}
                 </h2>
-                <p className="mt-1 text-sm text-slate-500">
-                  {formatDate(item.saleDate)}
-                </p>
+                <p className="mt-1 text-sm text-slate-500">{formatDate(item.saleDate)}</p>
               </div>
               <div className="flex flex-col items-end gap-2">
                 <strong className="text-brand-700 dark:text-brand-400">
@@ -91,13 +82,7 @@ export default function MyPurchasesPage() {
   );
 }
 
-function CustomerPage({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+function CustomerPage({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{title}</h1>
@@ -120,8 +105,6 @@ function ErrorMessage({ message }: { message: string }) {
 
 function EmptyMessage({ message }: { message: string }) {
   return (
-    <p className="rounded-xl border border-dashed p-10 text-center text-slate-500">
-      {message}
-    </p>
+    <p className="rounded-xl border border-dashed p-10 text-center text-slate-500">{message}</p>
   );
 }

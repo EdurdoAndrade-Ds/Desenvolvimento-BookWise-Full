@@ -13,6 +13,23 @@ export interface BookInput {
   categoryIds?: number[];
 }
 
+export type PriceAdjustmentType = 'DISCOUNT' | 'INCREASE';
+
+export interface PriceAdjustmentInput {
+  percentage: number;
+  type: PriceAdjustmentType;
+  bookId?: number;
+  categoryId?: number;
+  titleContains?: string;
+}
+
+export interface PriceAdjustmentResult {
+  type: PriceAdjustmentType;
+  percentage: number;
+  factor: number;
+  updatedBooks: number;
+}
+
 export interface ListBooksParams {
   page?: number;
   size?: number;
@@ -39,4 +56,7 @@ export const booksService = {
   update: (id: number, input: BookInput) => http.put<Book>(`/api/v1/books/${id}`, input),
 
   remove: (id: number) => http.delete<void>(`/api/v1/books/${id}`),
+
+  applyPriceAdjustment: (input: PriceAdjustmentInput) =>
+    http.post<PriceAdjustmentResult>('/api/v1/books/price-adjustments', input),
 };

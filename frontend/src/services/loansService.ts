@@ -35,5 +35,7 @@ export const loansService = {
 
   create: (input: LoanInput) => http.post<Loan>('/api/v1/loans', input),
 
+  renew: (id: number) => http.post<Loan>(`/api/v1/loans/${id}/renew`, {}),
+
   return: (id: number) => http.post<Loan>(`/api/v1/loans/${id}/return`, {}),
 };

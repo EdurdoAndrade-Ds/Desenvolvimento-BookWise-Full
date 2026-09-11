@@ -32,9 +32,7 @@ export default function StatCard({
       </div>
       <div className="mt-3 flex items-center gap-2 text-sm">
         {trend && (
-          <span
-            className={`font-medium ${trendUp ? 'text-emerald-600' : 'text-red-600'}`}
-          >
+          <span className={`font-medium ${trendUp ? 'text-emerald-600' : 'text-red-600'}`}>
             {trendUp ? '▲' : '▼'} {trend}
           </span>
         )}

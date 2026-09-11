@@ -57,11 +57,7 @@ function clampColor(value: number): number {
 }
 
 function luminance(red: number, green: number, blue: number): number {
-  return clampColor(
-    LUMA_RED_WEIGHT * red
-      + LUMA_GREEN_WEIGHT * green
-      + LUMA_BLUE_WEIGHT * blue,
-  );
+  return clampColor(LUMA_RED_WEIGHT * red + LUMA_GREEN_WEIGHT * green + LUMA_BLUE_WEIGHT * blue);
 }
 
 function imageFromData(src: ImageData, data: Uint8ClampedArray): ImageData {
@@ -96,10 +92,7 @@ export function invert(src: ImageData): ImageData {
 }
 
 /** Aplica offset de brilho e fator de contraste, limitando cada canal a 0..255. */
-export function brightnessContrast(
-  src: ImageData,
-  options: BrightnessContrastOptions,
-): ImageData {
+export function brightnessContrast(src: ImageData, options: BrightnessContrastOptions): ImageData {
   const output = new Uint8ClampedArray(src.data);
   const midpoint = MAX_COLOR / 2;
   for (let index = 0; index < src.data.length; index += CHANNELS) {
@@ -141,15 +134,9 @@ export function convolve3x3(
       for (let channel = RED_CHANNEL; channel <= BLUE_CHANNEL; channel += 1) {
         let sum = 0;
         for (let kernelY = 0; kernelY < KERNEL_SIZE; kernelY += 1) {
-          const sourceY = Math.max(
-            0,
-            Math.min(src.height - 1, y + kernelY - radius),
-          );
+          const sourceY = Math.max(0, Math.min(src.height - 1, y + kernelY - radius));
           for (let kernelX = 0; kernelX < KERNEL_SIZE; kernelX += 1) {
-            const sourceX = Math.max(
-              0,
-              Math.min(src.width - 1, x + kernelX - radius),
-            );
+            const sourceX = Math.max(0, Math.min(src.width - 1, x + kernelX - radius));
             const sourceIndex = (sourceY * src.width + sourceX) * CHANNELS;
             const kernelIndex = kernelY * KERNEL_SIZE + kernelX;
             sum += src.data[sourceIndex + channel] * kernel[kernelIndex];
@@ -210,11 +197,13 @@ export function histogram(src: ImageData): ImageHistogram {
     result.r[src.data[index + RED_CHANNEL]] += 1;
     result.g[src.data[index + GREEN_CHANNEL]] += 1;
     result.b[src.data[index + BLUE_CHANNEL]] += 1;
-    result.luma[luminance(
-      src.data[index + RED_CHANNEL],
-      src.data[index + GREEN_CHANNEL],
-      src.data[index + BLUE_CHANNEL],
-    )] += 1;
+    result.luma[
+      luminance(
+        src.data[index + RED_CHANNEL],
+        src.data[index + GREEN_CHANNEL],
+        src.data[index + BLUE_CHANNEL],
+      )
+    ] += 1;
   }
   return result;
 }
@@ -245,9 +234,8 @@ export function equalizeHistogram(src: ImageData): ImageData {
     const sourceGreen = src.data[index + GREEN_CHANNEL];
     const sourceBlue = src.data[index + BLUE_CHANNEL];
     const sourceLuma = luminance(sourceRed, sourceGreen, sourceBlue);
-    const equalizedLuma = cdfRange <= 0
-      ? sourceLuma
-      : ((cumulative[sourceLuma] - minimumCdf) / cdfRange) * MAX_COLOR;
+    const equalizedLuma =
+      cdfRange <= 0 ? sourceLuma : ((cumulative[sourceLuma] - minimumCdf) / cdfRange) * MAX_COLOR;
     const ratio = sourceLuma === 0 ? 0 : equalizedLuma / sourceLuma;
     output[index + RED_CHANNEL] = clampColor(sourceRed * ratio);
     output[index + GREEN_CHANNEL] = clampColor(sourceGreen * ratio);

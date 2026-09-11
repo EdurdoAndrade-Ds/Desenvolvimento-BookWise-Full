@@ -3,11 +3,8 @@ import type { Reservation } from '../../types/api';
 import { reservationsService } from '../../services/reservationsService';
 import { ApiError } from '../../services/http';
 import { formatDate } from '../../lib/format';
-import { useCurrentCustomer } from '../../context/CurrentCustomerContext';
-import {
-  RESERVATION_STATUS_LABELS,
-  RESERVATION_STATUS_STYLES,
-} from '../../lib/reservationStatus';
+import { useCurrentCustomer } from '../../context/useCurrentCustomer';
+import { RESERVATION_STATUS_LABELS, RESERVATION_STATUS_STYLES } from '../../lib/reservationStatus';
 
 export default function MyReservationsPage() {
   const { customer } = useCurrentCustomer();
@@ -20,11 +17,7 @@ export default function MyReservationsPage() {
       const data = await reservationsService.list({ userId: customer.id, size: 100 });
       setItems(data.content);
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : 'Não foi possível carregar suas reservas.',
-      );
+      setError(err instanceof ApiError ? err.message : 'Não foi possível carregar suas reservas.');
     }
   }, [customer]);
 
@@ -39,11 +32,7 @@ export default function MyReservationsPage() {
       await reservationsService.cancel(reservation.id);
       await load();
     } catch (err) {
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : 'Não foi possível cancelar a reserva.',
-      );
+      setError(err instanceof ApiError ? err.message : 'Não foi possível cancelar a reserva.');
     }
   };
 
@@ -78,9 +67,7 @@ export default function MyReservationsPage() {
             className="flex flex-col justify-between gap-4 rounded-xl border border-slate-200 bg-white p-5 sm:flex-row sm:items-center dark:border-slate-800 dark:bg-slate-900"
           >
             <div>
-              <h2 className="font-semibold text-slate-800 dark:text-slate-100">
-                {item.bookTitle}
-              </h2>
+              <h2 className="font-semibold text-slate-800 dark:text-slate-100">{item.bookTitle}</h2>
               <p className="mt-1 text-sm text-slate-500">
                 Reservado em {formatDate(item.reserveDate)}
               </p>
@@ -107,13 +94,7 @@ export default function MyReservationsPage() {
   );
 }
 
-function CustomerPage({
-  title,
-  children,
-}: {
-  title: string;
-  children: ReactNode;
-}) {
+function CustomerPage({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div className="space-y-5">
       <h1 className="text-2xl font-bold text-slate-800 dark:text-slate-100">{title}</h1>
@@ -136,8 +117,6 @@ function ErrorMessage({ message }: { message: string }) {
 
 function EmptyMessage({ message }: { message: string }) {
   return (
-    <p className="rounded-xl border border-dashed p-10 text-center text-slate-500">
-      {message}
-    </p>
+    <p className="rounded-xl border border-dashed p-10 text-center text-slate-500">{message}</p>
   );
 }

@@ -1,6 +1,9 @@
 // Cliente HTTP minimalista sobre fetch.
-// A base e vazia: as chamadas usam caminhos '/api/...' que o proxy do Vite
-// (vite.config.ts) redireciona para o backend em http://localhost:8080.
+// Em desenvolvimento a base e vazia e o proxy do Vite (vite.config.ts) envia
+// '/api/...' para http://localhost:8080. Em deploys onde o frontend e servido
+// separado do backend, defina VITE_API_URL com a origem da API.
+
+const baseUrl = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
 
 export class ApiError extends Error {
   constructor(
@@ -13,7 +16,7 @@ export class ApiError extends Error {
 }
 
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
-  const response = await fetch(path, {
+  const response = await fetch(`${baseUrl}${path}`, {
     method,
     headers: body !== undefined ? { 'Content-Type': 'application/json' } : undefined,
     body: body !== undefined ? JSON.stringify(body) : undefined,

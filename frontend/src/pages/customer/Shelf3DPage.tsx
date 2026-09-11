@@ -4,7 +4,8 @@ import { Boxes, RefreshCw } from 'lucide-react';
 import type { Book } from '../../types/api';
 import { booksService } from '../../services/booksService';
 import { ApiError } from '../../services/http';
-import Bookshelf3D, { isWebGLAvailable, type SceneSettings } from '../../components/graphics/Bookshelf3D';
+import Bookshelf3D, { type SceneSettings } from '../../components/graphics/Bookshelf3D';
+import { isWebGLAvailable } from '../../lib/webgl';
 import ShelfRaster from '../../components/graphics/ShelfRaster';
 import { buildShelfLayout, type ShelfBook } from '../../graphics/shelfLayout';
 import { formatBookFormat, formatCurrency } from '../../lib/format';
@@ -56,9 +57,7 @@ export default function Shelf3DPage() {
       .list({ page: 0, size: MAX_BOOKS })
       .then((result) => setBooks(result.content))
       .catch((err) =>
-        setError(
-          err instanceof ApiError ? err.message : 'Não foi possível carregar o acervo.',
-        ),
+        setError(err instanceof ApiError ? err.message : 'Não foi possível carregar o acervo.'),
       )
       .finally(() => setLoading(false));
   };
@@ -76,10 +75,9 @@ export default function Shelf3DPage() {
         </p>
         <h1 className="text-3xl font-bold">O acervo em 1D, 2D e 3D</h1>
         <p className="mt-3 max-w-3xl text-brand-100">
-          O mesmo layout derivado do catálogo é desenhado em três dimensões de
-          representação: sinal de varredura, elevação rasterizada em Canvas 2D e cena
-          WebGL com malhas, iluminação e seleção por <em>raycasting</em>. Clique em um
-          livro em qualquer uma delas.
+          O mesmo layout derivado do catálogo é desenhado em três dimensões de representação: sinal
+          de varredura, elevação rasterizada em Canvas 2D e cena WebGL com malhas, iluminação e
+          seleção por <em>raycasting</em>. Clique em um livro em qualquer uma delas.
         </p>
       </section>
 
@@ -142,9 +140,7 @@ export default function Shelf3DPage() {
         </div>
 
         <div className="space-y-4">
-          {dimension === '3d' ? (
-            <SettingsPanel settings={settings} onChange={setSettings} />
-          ) : null}
+          {dimension === '3d' ? <SettingsPanel settings={settings} onChange={setSettings} /> : null}
           <SelectedBookPanel entry={selected} />
         </div>
       </div>
@@ -273,10 +269,7 @@ function SelectedBookPanel({ entry }: { entry: ShelfBook | null }) {
         <Row label="Estoque" value={book.stock === undefined ? '—' : String(book.stock)} />
         <Row label="Preço" value={book.price === undefined ? '—' : formatCurrency(book.price)} />
         <Row label="Prateleira" value={String(entry.shelfIndex + 1)} />
-        <Row
-          label="Malha (l × a × p)"
-          value={size.map((value) => value.toFixed(2)).join(' × ')}
-        />
+        <Row label="Malha (l × a × p)" value={size.map((value) => value.toFixed(2)).join(' × ')} />
       </dl>
       <Link
         to={`/books/${book.id}`}

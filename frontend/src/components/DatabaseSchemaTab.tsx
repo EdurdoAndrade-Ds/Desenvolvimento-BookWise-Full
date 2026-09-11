@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   AlertCircle,
   ChevronDown,
@@ -24,8 +18,7 @@ import { schemaService } from '../services/schemaService';
 
 type SchemaView = 'tables' | 'mer' | 'der';
 
-const BADGE_BASE =
-  'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium';
+const BADGE_BASE = 'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium';
 
 export default function DatabaseSchemaTab() {
   const [schema, setSchema] = useState<DatabaseSchema | null>(null);
@@ -194,25 +187,17 @@ function TableAccordion({
       >
         <span className="flex items-center gap-3">
           <Table2 className="h-5 w-5 text-brand-600" />
-          <span className="font-semibold text-slate-800 dark:text-slate-100">
-            {table.name}
-          </span>
-          <span className="text-sm text-slate-400">
-            {table.columns.length} atributos
-          </span>
+          <span className="font-semibold text-slate-800 dark:text-slate-100">{table.name}</span>
+          <span className="text-sm text-slate-400">{table.columns.length} atributos</span>
         </span>
         <ChevronDown
-          className={`h-5 w-5 text-slate-400 transition-transform ${
-            expanded ? 'rotate-180' : ''
-          }`}
+          className={`h-5 w-5 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
         />
       </button>
       {expanded && (
         <div className="border-t border-slate-100 dark:border-slate-800">
           {table.columns.map((column) => {
-            const foreignKey = table.foreignKeys.find(
-              (item) => item.column === column.name,
-            );
+            const foreignKey = table.foreignKeys.find((item) => item.column === column.name);
             return (
               <div
                 key={column.name}
@@ -258,13 +243,7 @@ function TableAccordion({
   );
 }
 
-function Badge({
-  className,
-  children,
-}: {
-  className: string;
-  children: ReactNode;
-}) {
+function Badge({ className, children }: { className: string; children: ReactNode }) {
   return <span className={`${BADGE_BASE} ${className}`}>{children}</span>;
 }
 
@@ -282,8 +261,7 @@ function SchemaDiagram({ schema }: { schema: DatabaseSchema }) {
     [schema.tables],
   );
   const height =
-    Math.max(...Array.from(positions.values()).map((item) => item.y + item.height)) +
-    15;
+    Math.max(...Array.from(positions.values()).map((item) => item.y + item.height)) + 15;
   const activeZoom = zoom ?? fitZoom;
   const minimumZoom = Math.max(0.2, fitZoom * 0.6);
 
@@ -294,11 +272,7 @@ function SchemaDiagram({ schema }: { schema: DatabaseSchema }) {
     const updateFitZoom = () => {
       const availableWidth = Math.max(320, element.clientWidth - 32);
       const availableHeight = Math.max(300, window.innerHeight * 0.75 - 90);
-      const nextFit = Math.min(
-        1,
-        availableWidth / width,
-        availableHeight / (height + 58),
-      );
+      const nextFit = Math.min(1, availableWidth / width, availableHeight / (height + 58));
       setFitZoom(Math.max(0.2, Number(nextFit.toFixed(2))));
     };
 
@@ -318,11 +292,7 @@ function SchemaDiagram({ schema }: { schema: DatabaseSchema }) {
         <span>Arraste as barras de rolagem para explorar o diagrama.</span>
         <div className="flex items-center gap-1">
           <button
-            onClick={() =>
-              setZoom((value) =>
-                Math.max(minimumZoom, (value ?? fitZoom) - 0.1),
-              )
-            }
+            onClick={() => setZoom((value) => Math.max(minimumZoom, (value ?? fitZoom) - 0.1))}
             className="rounded border border-slate-300 p-1.5 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
             aria-label="Reduzir zoom"
           >
@@ -336,9 +306,7 @@ function SchemaDiagram({ schema }: { schema: DatabaseSchema }) {
           </button>
           <span className="w-12 text-center">{Math.round(activeZoom * 100)}%</span>
           <button
-            onClick={() =>
-              setZoom((value) => Math.min(1.5, (value ?? fitZoom) + 0.1))
-            }
+            onClick={() => setZoom((value) => Math.min(1.5, (value ?? fitZoom) + 0.1))}
             className="rounded border border-slate-300 p-1.5 hover:bg-slate-100 dark:border-slate-700 dark:hover:bg-slate-800"
             aria-label="Aumentar zoom"
           >
@@ -472,17 +440,13 @@ function buildMerEntities(tables: SchemaTable[]): MerEntity[] {
       label: ENTITY_LABELS[table.name] ?? table.name,
       attributes: table.columns
         .filter(
-          (column) =>
-            !table.foreignKeys.some((foreignKey) => foreignKey.column === column.name),
+          (column) => !table.foreignKeys.some((foreignKey) => foreignKey.column === column.name),
         )
         .map((column) => column.name),
     }));
 }
 
-function buildMerRelationships(
-  tables: SchemaTable[],
-  entities: MerEntity[],
-): MerRelationship[] {
+function buildMerRelationships(tables: SchemaTable[], entities: MerEntity[]): MerRelationship[] {
   const entityNames = new Set(entities.map((entity) => entity.table.name));
   const relationships: MerRelationship[] = [];
 
@@ -506,9 +470,8 @@ function buildMerRelationships(
           attributes: table.columns
             .filter(
               (column) =>
-                !table.foreignKeys.some(
-                  (foreignKey) => foreignKey.column === column.name,
-                ) && !table.primaryKey.includes(column.name),
+                !table.foreignKeys.some((foreignKey) => foreignKey.column === column.name) &&
+                !table.primaryKey.includes(column.name),
             )
             .map((column) => column.name),
         });
@@ -537,12 +500,9 @@ function buildMerRelationships(
 
 function isMerRelationshipTable(table: SchemaTable) {
   const primaryKeys = new Set(table.primaryKey);
-  const foreignKeys = new Set(
-    table.foreignKeys.map((foreignKey) => foreignKey.column),
-  );
+  const foreignKeys = new Set(table.foreignKeys.map((foreignKey) => foreignKey.column));
   const isPureJunction =
-    primaryKeys.size > 0 &&
-    Array.from(primaryKeys).every((column) => foreignKeys.has(column));
+    primaryKeys.size > 0 && Array.from(primaryKeys).every((column) => foreignKeys.has(column));
   return isPureJunction || table.name.endsWith('_items');
 }
 
@@ -571,10 +531,7 @@ function merConnectionPoint(position: MerPosition, target: { x: number; y: numbe
   if (Math.abs(dx) > Math.abs(dy)) {
     return {
       x: position.x + (dx > 0 ? position.width : 0),
-      y: Math.max(
-        position.y + 12,
-        Math.min(position.y + position.height - 12, target.y),
-      ),
+      y: Math.max(position.y + 12, Math.min(position.y + position.height - 12, target.y)),
     };
   }
   return {
@@ -659,9 +616,7 @@ function DiagramTable({
       {table.columns.map((column, index) => (
         <g key={column.name} transform={`translate(16, ${62 + index * 24})`}>
           {(() => {
-            const foreignKey = table.foreignKeys.some(
-              (item) => item.column === column.name,
-            );
+            const foreignKey = table.foreignKeys.some((item) => item.column === column.name);
             const marker = column.primaryKey
               ? foreignKey
                 ? 'PK/FK '
@@ -687,11 +642,7 @@ function DiagramTable({
                   {marker}
                   {column.name}
                 </text>
-                <text
-                  x="205"
-                  y="0"
-                  className="fill-slate-500 text-[12px] dark:fill-slate-400"
-                >
+                <text x="205" y="0" className="fill-slate-500 text-[12px] dark:fill-slate-400">
                   {formatType(column.type)}
                 </text>
               </>
@@ -878,9 +829,7 @@ function MerCanvas({
         <span>Modelo conceitual na notação de Chen.</span>
         <div className="flex items-center gap-1">
           <button
-            onClick={() =>
-              setZoom((value) => Math.max(minimumZoom, (value ?? fitZoom) - 0.1))
-            }
+            onClick={() => setZoom((value) => Math.max(minimumZoom, (value ?? fitZoom) - 0.1))}
             className="rounded border border-slate-300 p-1.5 dark:border-slate-700"
             aria-label="Reduzir zoom do MER"
           >
@@ -894,9 +843,7 @@ function MerCanvas({
           </button>
           <span className="w-12 text-center">{Math.round(activeZoom * 100)}%</span>
           <button
-            onClick={() =>
-              setZoom((value) => Math.min(1.5, (value ?? fitZoom) + 0.1))
-            }
+            onClick={() => setZoom((value) => Math.min(1.5, (value ?? fitZoom) + 0.1))}
             className="rounded border border-slate-300 p-1.5 dark:border-slate-700"
             aria-label="Aumentar zoom do MER"
           >
@@ -932,8 +879,7 @@ function MerCanvas({
 
 function overviewPositions(entities: MerEntity[]) {
   const gap = (names: string[]) =>
-    Math.max(...names.map((name) => merDiamondWidth(name))) +
-    2 * (CARDINALITY_WIDTH + 12);
+    Math.max(...names.map((name) => merDiamondWidth(name))) + 2 * (CARDINALITY_WIDTH + 12);
   const userWidth = merEntityWidth(ENTITY_LABELS.users);
   const centralWidth = Math.max(
     merEntityWidth(ENTITY_LABELS.loans),
@@ -960,12 +906,7 @@ function overviewPositions(entities: MerEntity[]) {
     reservations: [centralX, reservationsY, centralWidth, ENTITY_HEIGHT],
     sales: [centralX, salesY, centralWidth, ENTITY_HEIGHT],
     books: [booksX, reservationsY, bookWidth, ENTITY_HEIGHT],
-    categories: [
-      booksX + bookWidth + bookCategoryGap,
-      reservationsY,
-      categoryWidth,
-      ENTITY_HEIGHT,
-    ],
+    categories: [booksX + bookWidth + bookCategoryGap, reservationsY, categoryWidth, ENTITY_HEIGHT],
     fines: [centralX, finesY, centralWidth, ENTITY_HEIGHT],
   };
   const result = new Map<string, MerPosition>();
@@ -982,10 +923,7 @@ function overviewPositions(entities: MerEntity[]) {
   return result;
 }
 
-function merOverviewCanvasSize(
-  entities: MerEntity[],
-  relationships: MerRelationship[],
-) {
+function merOverviewCanvasSize(entities: MerEntity[], relationships: MerRelationship[]) {
   const positions = overviewPositions(entities);
   const maxRight = Math.max(
     ...Array.from(positions.values(), (position) => position.x + position.width),
@@ -1017,12 +955,13 @@ function MerOverviewContent({
     if (!left || !right) return [];
     const leftCenter = merPositionCenter(left);
     const rightCenter = merPositionCenter(right);
-    const center = relationship.left === relationship.right
-      ? { x: leftCenter.x, y: left.y + left.height + DIAMOND_HEIGHT + 24 }
-      : {
-          x: (leftCenter.x + rightCenter.x) / 2,
-          y: (leftCenter.y + rightCenter.y) / 2,
-        };
+    const center =
+      relationship.left === relationship.right
+        ? { x: leftCenter.x, y: left.y + left.height + DIAMOND_HEIGHT + 24 }
+        : {
+            x: (leftCenter.x + rightCenter.x) / 2,
+            y: (leftCenter.y + rightCenter.y) / 2,
+          };
     return [{ relationship, center }];
   });
   return (
@@ -1082,19 +1021,11 @@ function MerOverviewRelationship({
       />
       <MerDiamond center={center} name={relationship.name} />
       <MerCardinality
-        {...merOverviewCardinalityPosition(
-          leftPoint,
-          center,
-          merDiamondWidth(relationship.name),
-        )}
+        {...merOverviewCardinalityPosition(leftPoint, center, merDiamondWidth(relationship.name))}
         value={relationship.leftCardinality}
       />
       <MerCardinality
-        {...merOverviewCardinalityPosition(
-          rightPoint,
-          center,
-          merDiamondWidth(relationship.name),
-        )}
+        {...merOverviewCardinalityPosition(rightPoint, center, merDiamondWidth(relationship.name))}
         value={relationship.rightCardinality}
       />
     </g>
@@ -1142,8 +1073,8 @@ function MerEntityContent({
         <MerConceptAttribute key={attribute.name} attribute={attribute} entity={center} />
       ))}
       {selected.map((relationship, index) => {
-      const left = index % 2 === 0;
-      const sideIndex = Math.floor(index / 2);
+        const left = index % 2 === 0;
+        const sideIndex = Math.floor(index / 2);
         const neighborName =
           relationship.left === entity.table.name ? relationship.right : relationship.left;
         const neighbor = entities.find((item) => item.table.name === neighborName) ?? entity;
@@ -1157,10 +1088,10 @@ function MerEntityContent({
         };
         const diamond = {
           x: left
-            ? neighborPosition.x + neighborPosition.width +
+            ? neighborPosition.x +
+              neighborPosition.width +
               (center.x - (neighborPosition.x + neighborPosition.width)) / 2
-            : center.x + center.width +
-              (neighborPosition.x - (center.x + center.width)) / 2,
+            : center.x + center.width + (neighborPosition.x - (center.x + center.width)) / 2,
           y: diamondY,
         };
         return (
@@ -1281,13 +1212,7 @@ function MerConceptAttribute({
   );
 }
 
-function MerEntityBox({
-  entity,
-  position,
-}: {
-  entity: MerEntity;
-  position: MerPosition;
-}) {
+function MerEntityBox({ entity, position }: { entity: MerEntity; position: MerPosition }) {
   return (
     <g>
       <rect
@@ -1310,13 +1235,7 @@ function MerEntityBox({
   );
 }
 
-function MerDiamond({
-  center,
-  name,
-}: {
-  center: { x: number; y: number };
-  name: string;
-}) {
+function MerDiamond({ center, name }: { center: { x: number; y: number }; name: string }) {
   const width = merDiamondWidth(name);
   const height = DIAMOND_HEIGHT;
   return (
@@ -1354,15 +1273,7 @@ function merAttributeTextWidth(text: string) {
   return Math.max(52, text.length * 8 + 24);
 }
 
-function MerCardinality({
-  x,
-  y,
-  value,
-}: {
-  x: number;
-  y: number;
-  value: string;
-}) {
+function MerCardinality({ x, y, value }: { x: number; y: number; value: string }) {
   return (
     <g>
       <rect
@@ -1393,10 +1304,7 @@ function merPositionCenter(position: MerPosition) {
   };
 }
 
-function merCardinalityPosition(
-  point: { x: number; y: number },
-  target: { x: number; y: number },
-) {
+function merCardinalityPosition(point: { x: number; y: number }, target: { x: number; y: number }) {
   const dx = target.x - point.x;
   const dy = target.y - point.y;
   if (Math.abs(dx) >= Math.abs(dy)) {
@@ -1422,18 +1330,14 @@ function merOverviewCardinalityPosition(
     return {
       x:
         diamond.x +
-        Math.sign(point.x - diamond.x || -1) *
-          (diamondWidth / 2 + CARDINALITY_WIDTH / 2 + 14),
+        Math.sign(point.x - diamond.x || -1) * (diamondWidth / 2 + CARDINALITY_WIDTH / 2 + 14),
       y: diamond.y,
     };
   }
   return merCardinalityPosition(point, diamond);
 }
 
-function merOrthPath(
-  from: { x: number; y: number },
-  to: { x: number; y: number },
-) {
+function merOrthPath(from: { x: number; y: number }, to: { x: number; y: number }) {
   if (Math.abs(to.x - from.x) >= Math.abs(to.y - from.y)) {
     return `M ${from.x} ${from.y} H ${to.x} V ${to.y}`;
   }

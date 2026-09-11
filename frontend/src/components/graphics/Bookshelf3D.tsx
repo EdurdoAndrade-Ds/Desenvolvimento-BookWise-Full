@@ -29,19 +29,6 @@ interface Bookshelf3DProps {
   onSelect: (entry: ShelfBook) => void;
 }
 
-/** Indica se o navegador tem contexto WebGL, para exibir um fallback textual. */
-export function isWebGLAvailable(): boolean {
-  try {
-    const canvas = document.createElement('canvas');
-    return Boolean(
-      window.WebGLRenderingContext
-        && (canvas.getContext('webgl') || canvas.getContext('experimental-webgl')),
-    );
-  } catch {
-    return false;
-  }
-}
-
 /**
  * Cena WebGL da estante: malhas da estrutura, livros posicionados pelo layout,
  * iluminacao com mapa de sombras e camera orbital (perspectiva ou ortografica).
@@ -87,7 +74,9 @@ export default function Bookshelf3D({
         <group position={[0, verticalCenter, 0]}>
           {layout.boards.map((board) => (
             <mesh key={board.index} position={[0, board.y, 0]} castShadow receiveShadow>
-              <boxGeometry args={[board.width + SIDE_PANEL_THICKNESS * 2, board.thickness, board.depth]} />
+              <boxGeometry
+                args={[board.width + SIDE_PANEL_THICKNESS * 2, board.thickness, board.depth]}
+              />
               <meshStandardMaterial color={WOOD_COLOR} roughness={0.8} />
             </mesh>
           ))}

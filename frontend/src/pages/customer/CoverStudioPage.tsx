@@ -49,20 +49,36 @@ interface FilterOption {
 
 const FILTERS: FilterOption[] = [
   { id: 'none', label: 'Original', hint: 'Imagem de entrada, sem processamento.' },
-  { id: 'grayscale', label: 'Escala de cinza', hint: 'Luminância Rec.601: 0.299R + 0.587G + 0.114B.' },
+  {
+    id: 'grayscale',
+    label: 'Escala de cinza',
+    hint: 'Luminância Rec.601: 0.299R + 0.587G + 0.114B.',
+  },
   { id: 'invert', label: 'Negativo', hint: 'Cada canal vira 255 - valor.' },
   {
     id: 'brightnessContrast',
     label: 'Brilho e contraste',
     hint: 'Ajuste ponto a ponto: (valor - 128) × contraste + 128 + brilho.',
   },
-  { id: 'boxBlur', label: 'Desfoque médio (3×3)', hint: 'Convolução com kernel uniforme, divisor 9.' },
-  { id: 'gaussianBlur', label: 'Desfoque gaussiano (3×3)', hint: 'Convolução com pesos 1-2-1, divisor 16.' },
+  {
+    id: 'boxBlur',
+    label: 'Desfoque médio (3×3)',
+    hint: 'Convolução com kernel uniforme, divisor 9.',
+  },
+  {
+    id: 'gaussianBlur',
+    label: 'Desfoque gaussiano (3×3)',
+    hint: 'Convolução com pesos 1-2-1, divisor 16.',
+  },
   { id: 'sharpen', label: 'Nitidez', hint: 'Convolução que reforça o centro contra a vizinhança.' },
   { id: 'emboss', label: 'Relevo', hint: 'Convolução direcional com offset 128.' },
   { id: 'laplacian', label: 'Laplaciano', hint: 'Realce isotrópico de bordas.' },
   { id: 'sobel', label: 'Sobel', hint: 'Gradiente Gx/Gy e magnitude √(Gx² + Gy²).' },
-  { id: 'equalize', label: 'Equalização de histograma', hint: 'Redistribui a luminância pela CDF.' },
+  {
+    id: 'equalize',
+    label: 'Equalização de histograma',
+    hint: 'Redistribui a luminância pela CDF.',
+  },
 ];
 
 function applyFilter(
@@ -152,9 +168,7 @@ export default function CoverStudioPage() {
         if (result.content.length > 0) setBookId(result.content[0].id);
       })
       .catch((err) =>
-        setError(
-          err instanceof ApiError ? err.message : 'Não foi possível carregar os livros.',
-        ),
+        setError(err instanceof ApiError ? err.message : 'Não foi possível carregar os livros.'),
       );
   }, []);
 
@@ -235,10 +249,10 @@ export default function CoverStudioPage() {
         </p>
         <h1 className="text-3xl font-bold">Processamento de imagem da capa</h1>
         <p className="mt-3 max-w-3xl text-brand-100">
-          A capa é gerada proceduralmente a partir do título e do autor (hash + ruído
-          fractal) ou carregada de um arquivo. Todos os filtros percorrem o{' '}
-          <code>ImageData</code> pixel a pixel — convolução 3×3, Sobel e equalização de
-          histograma implementados à mão, sem <code>ctx.filter</code>.
+          A capa é gerada proceduralmente a partir do título e do autor (hash + ruído fractal) ou
+          carregada de um arquivo. Todos os filtros percorrem o <code>ImageData</code> pixel a pixel
+          — convolução 3×3, Sobel e equalização de histograma implementados à mão, sem{' '}
+          <code>ctx.filter</code>.
         </p>
       </section>
 

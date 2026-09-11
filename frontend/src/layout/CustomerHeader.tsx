@@ -2,7 +2,7 @@ import { Link, NavLink } from 'react-router-dom';
 import { BookOpen, UserCircle } from 'lucide-react';
 import type { ReactNode } from 'react';
 import ThemeToggle from '../components/ThemeToggle';
-import { useCurrentCustomer } from '../context/CurrentCustomerContext';
+import { useCurrentCustomer } from '../context/useCurrentCustomer';
 
 export default function CustomerHeader() {
   const { customer, customers, setCustomer, loading } = useCurrentCustomer();
@@ -10,7 +10,10 @@ export default function CustomerHeader() {
   return (
     <header className="border-b border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <Link to="/" className="flex items-center gap-2 text-lg font-bold text-brand-700 dark:text-brand-400">
+        <Link
+          to="/"
+          className="flex items-center gap-2 text-lg font-bold text-brand-700 dark:text-brand-400"
+        >
           <BookOpen className="h-6 w-6" />
           BookWise
         </Link>
@@ -45,7 +48,9 @@ export default function CustomerHeader() {
         </div>
       </div>
       <nav className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 pb-3 text-sm sm:px-6 lg:px-8">
-        <CustomerNavLink to="/" end>Catálogo</CustomerNavLink>
+        <CustomerNavLink to="/" end>
+          Catálogo
+        </CustomerNavLink>
         <CustomerNavLink to="/my-loans">Empréstimos</CustomerNavLink>
         <CustomerNavLink to="/my-reservations">Reservas</CustomerNavLink>
         <CustomerNavLink to="/my-purchases">Compras</CustomerNavLink>

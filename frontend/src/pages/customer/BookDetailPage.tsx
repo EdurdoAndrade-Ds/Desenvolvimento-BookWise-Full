@@ -8,7 +8,7 @@ import { reservationsService } from '../../services/reservationsService';
 import { salesService } from '../../services/salesService';
 import { ApiError } from '../../services/http';
 import { formatCurrency } from '../../lib/format';
-import { useCurrentCustomer } from '../../context/CurrentCustomerContext';
+import { useCurrentCustomer } from '../../context/useCurrentCustomer';
 
 type Action = 'reserve' | 'borrow' | 'buy';
 
@@ -35,11 +35,7 @@ export default function BookDetailPage() {
       if (err instanceof ApiError && err.status === 404) {
         setNotFound(true);
       } else {
-        setError(
-          err instanceof ApiError
-            ? err.message
-            : 'Não foi possível carregar o livro.',
-        );
+        setError(err instanceof ApiError ? err.message : 'Não foi possível carregar o livro.');
       }
     } finally {
       setLoading(false);
@@ -164,23 +160,17 @@ export default function BookDetailPage() {
           <div className="mt-auto pt-8">
             <div className="flex items-end justify-between gap-4">
               <span className="text-2xl font-bold text-brand-700 dark:text-brand-400">
-                {book.price !== undefined
-                  ? formatCurrency(book.price)
-                  : 'Preço sob consulta'}
+                {book.price !== undefined ? formatCurrency(book.price) : 'Preço sob consulta'}
               </span>
               <span
-                className={`text-sm font-medium ${
-                  available ? 'text-emerald-600' : 'text-red-500'
-                }`}
+                className={`text-sm font-medium ${available ? 'text-emerald-600' : 'text-red-500'}`}
               >
                 {available ? `${book.stock} disponível(is)` : 'Esgotado'}
               </span>
             </div>
 
             {disabledReason && (
-              <p className="mt-3 text-sm text-amber-700 dark:text-amber-400">
-                {disabledReason}
-              </p>
+              <p className="mt-3 text-sm text-amber-700 dark:text-amber-400">{disabledReason}</p>
             )}
 
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
