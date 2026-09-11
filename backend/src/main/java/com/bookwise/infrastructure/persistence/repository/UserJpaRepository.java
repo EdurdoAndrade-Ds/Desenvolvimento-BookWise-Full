@@ -14,8 +14,7 @@ public interface UserJpaRepository extends JpaRepository<UserEntity, Long> {
 
     @Query("""
             select u from UserEntity u
-            where :q is null
-               or lower(u.name) like lower(concat('%', :q, '%'))
+            where lower(u.name) like lower(concat('%', :q, '%'))
                or lower(u.email) like lower(concat('%', :q, '%'))
             """)
     Page<UserEntity> search(@Param("q") String q, Pageable pageable);
