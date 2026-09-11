@@ -26,6 +26,14 @@ public class FineService {
         this.repository = repository;
     }
 
+    /**
+     * Lista uma pagina de multas, opcionalmente filtrando por usuario.
+     *
+     * @param page   indice da pagina (base zero)
+     * @param size   tamanho da pagina
+     * @param userId id do usuario para filtrar, ou {@code null} para todas
+     * @return pagina de multas
+     */
     @Transactional(readOnly = true)
     public PageResponse<FineResponse> list(int page, int size, Long userId) {
         var result = userId == null
@@ -34,6 +42,13 @@ public class FineService {
         return FineMapper.toPageResponse(result);
     }
 
+    /**
+     * Busca uma multa pelo identificador.
+     *
+     * @param id identificador da multa
+     * @return a multa encontrada
+     * @throws FineNotFoundException se nao existir multa com o id informado
+     */
     @Transactional(readOnly = true)
     public FineResponse getById(Long id) {
         return repository.findById(id)
@@ -41,6 +56,14 @@ public class FineService {
                 .orElseThrow(() -> new FineNotFoundException(id));
     }
 
+    /**
+     * Registra o pagamento de uma multa.
+     *
+     * @param id identificador da multa
+     * @return a multa marcada como paga
+     * @throws FineNotFoundException se a multa nao existir
+     * @throws BusinessException     se a multa ja estiver paga
+     */
     public FineResponse pay(Long id) {
         Fine fine = repository.findById(id)
                 .orElseThrow(() -> new FineNotFoundException(id));

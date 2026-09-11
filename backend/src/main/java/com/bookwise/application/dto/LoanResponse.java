@@ -15,5 +15,6 @@ public record LoanResponse(
         LocalDate loanDate,
         LocalDate dueDate,
         LocalDate returnDate,
+        int renewalCount,
         LoanStatus status) {
 }

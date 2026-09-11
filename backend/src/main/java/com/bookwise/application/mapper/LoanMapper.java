@@ -30,6 +30,7 @@ public final class LoanMapper {
                 loan.loanDate(),
                 loan.dueDate(),
                 loan.returnDate(),
+                loan.renewalCount(),
                 loan.statusAt(reference));
     }
 

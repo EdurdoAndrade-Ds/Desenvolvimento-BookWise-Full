@@ -23,11 +23,26 @@ public class UserService {
         this.repository = repository;
     }
 
+    /**
+     * Lista uma pagina de usuarios, opcionalmente filtrando por um termo.
+     *
+     * @param query termo de busca (nome/email), ou {@code null} para todos
+     * @param page  indice da pagina (base zero)
+     * @param size  tamanho da pagina
+     * @return pagina de usuarios
+     */
     @Transactional(readOnly = true)
     public PageResponse<UserResponse> list(String query, int page, int size) {
         return UserMapper.toPageResponse(repository.search(query, page, size));
     }
 
+    /**
+     * Busca um usuario pelo identificador.
+     *
+     * @param id identificador do usuario
+     * @return o usuario encontrado
+     * @throws UserNotFoundException se nao existir usuario com o id informado
+     */
     @Transactional(readOnly = true)
     public UserResponse getById(Long id) {
         return repository.findById(id)
@@ -35,11 +50,25 @@ public class UserService {
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
+    /**
+     * Cria um novo usuario.
+     *
+     * @param request dados do usuario
+     * @return o usuario criado
+     */
     public UserResponse create(UserRequest request) {
         User saved = repository.save(UserMapper.toNewDomain(request));
         return UserMapper.toResponse(saved);
     }
 
+    /**
+     * Atualiza um usuario existente, preservando id e data de criacao.
+     *
+     * @param id      identificador do usuario
+     * @param request novos dados do usuario
+     * @return o usuario atualizado
+     * @throws UserNotFoundException se o usuario nao existir
+     */
     public UserResponse update(Long id, UserRequest request) {
         User existing = repository.findById(id)
                 .orElseThrow(() -> new UserNotFoundException(id));
@@ -47,6 +76,12 @@ public class UserService {
         return UserMapper.toResponse(repository.save(updated));
     }
 
+    /**
+     * Remove um usuario pelo identificador.
+     *
+     * @param id identificador do usuario
+     * @throws UserNotFoundException se o usuario nao existir
+     */
     public void delete(Long id) {
         if (!repository.existsById(id)) {
             throw new UserNotFoundException(id);

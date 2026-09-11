@@ -4,12 +4,12 @@ import com.bookwise.application.dto.PageResponse;
 import com.bookwise.application.dto.SaleRequest;
 import com.bookwise.application.dto.SaleResponse;
 import com.bookwise.application.mapper.SaleMapper;
+import com.bookwise.application.policy.StockPolicy;
 import com.bookwise.domain.exception.BookNotFoundException;
 import com.bookwise.domain.exception.BusinessException;
 import com.bookwise.domain.exception.SaleNotFoundException;
 import com.bookwise.domain.exception.UserNotFoundException;
 import com.bookwise.domain.model.Book;
-import com.bookwise.domain.model.BookFormat;
 import com.bookwise.domain.model.Sale;
 import com.bookwise.domain.model.SaleItem;
 import com.bookwise.domain.model.SaleStatus;
@@ -35,14 +35,27 @@ public class SaleService {
     private final SaleRepository saleRepository;
     private final UserRepository userRepository;
     private final BookRepository bookRepository;
+    private final StockPolicy stockPolicy;
 
     public SaleService(
-            SaleRepository saleRepository, UserRepository userRepository, BookRepository bookRepository) {
+            SaleRepository saleRepository,
+            UserRepository userRepository,
+            BookRepository bookRepository,
+            StockPolicy stockPolicy) {
         this.saleRepository = saleRepository;
         this.userRepository = userRepository;
         this.bookRepository = bookRepository;
+        this.stockPolicy = stockPolicy;
     }
 
+    /**
+     * Lista uma pagina de vendas, opcionalmente filtrando por usuario.
+     *
+     * @param page   indice da pagina (base zero)
+     * @param size   tamanho da pagina
+     * @param userId id do usuario para filtrar, ou {@code null} para todas
+     * @return pagina de vendas
+     */
     @Transactional(readOnly = true)
     public PageResponse<SaleResponse> list(int page, int size, Long userId) {
         var result = userId == null
@@ -51,6 +64,13 @@ public class SaleService {
         return SaleMapper.toPageResponse(result);
     }
 
+    /**
+     * Busca uma venda pelo identificador.
+     *
+     * @param id identificador da venda
+     * @return a venda encontrada
+     * @throws SaleNotFoundException se nao existir venda com o id informado
+     */
     @Transactional(readOnly = true)
     public SaleResponse getById(Long id) {
         return saleRepository.findById(id)
@@ -58,6 +78,17 @@ public class SaleService {
                 .orElseThrow(() -> new SaleNotFoundException(id));
     }
 
+    /**
+     * Registra uma nova venda: valida usuario e livros, baixa o estoque dos
+     * livros fisicos e calcula o total (usa o preco do livro quando o item nao
+     * informa o preco unitario).
+     *
+     * @param request dados da venda (usuario, itens e forma de pagamento)
+     * @return a venda criada com status PAID
+     * @throws UserNotFoundException se o usuario nao existir
+     * @throws BookNotFoundException se algum livro nao existir
+     * @throws BusinessException     se o estoque de um livro fisico for insuficiente
+     */
     public SaleResponse create(SaleRequest request) {
         User user = userRepository.findById(request.userId())
                 .orElseThrow(() -> new UserNotFoundException(request.userId()));
@@ -70,14 +101,7 @@ public class SaleService {
             Book book = bookRepository.findById(itemReq.bookId())
                     .orElseThrow(() -> new BookNotFoundException(itemReq.bookId()));
 
-            if (book.format() == BookFormat.PHYSICAL) {
-                int available = book.stock() == null ? 0 : book.stock();
-                if (available < quantity) {
-                    throw new BusinessException(
-                            "Estoque insuficiente para o livro '" + book.title() + "' (disponivel: " + available + ")");
-                }
-                bookRepository.save(book.withStock(available - quantity));
-            }
+            stockPolicy.withdraw(book, quantity);
 
             BigDecimal unitPrice = itemReq.unitPrice() != null
                     ? itemReq.unitPrice()
@@ -93,6 +117,14 @@ public class SaleService {
         return SaleMapper.toResponse(saleRepository.save(sale));
     }
 
+    /**
+     * Cancela uma venda e restaura o estoque dos livros fisicos vendidos.
+     *
+     * @param id identificador da venda
+     * @return a venda com status CANCELLED
+     * @throws SaleNotFoundException se a venda nao existir
+     * @throws BusinessException     se a venda ja estiver cancelada
+     */
     public SaleResponse cancel(Long id) {
         Sale sale = saleRepository.findById(id)
                 .orElseThrow(() -> new SaleNotFoundException(id));
@@ -101,14 +133,8 @@ public class SaleService {
             throw new BusinessException("Venda ja cancelada");
         }
 
-        // Restaura o estoque dos livros fisicos.
         for (SaleItem item : sale.items()) {
-            bookRepository.findById(item.bookId()).ifPresent(book -> {
-                if (book.format() == BookFormat.PHYSICAL) {
-                    int current = book.stock() == null ? 0 : book.stock();
-                    bookRepository.save(book.withStock(current + item.quantity()));
-                }
-            });
+            stockPolicy.restore(item.bookId(), item.quantity());
         }
 
         return SaleMapper.toResponse(saleRepository.save(sale.withStatus(SaleStatus.CANCELLED)));
