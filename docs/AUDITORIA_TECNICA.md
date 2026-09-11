@@ -407,3 +407,21 @@ frontend: npm test          -> 4 arquivos, 11 testes, todos passando
 frontend: npm ci em diretorio limpo -> 355 pacotes adicionados
 backend : mvn compile + mvn test -> BUILD SUCCESS
 ```
+
+## 14. Banco de produção e massa de demonstração (Fase 8)
+
+| Ponto | Correção aplicada | Status |
+|---|---|---|
+| `GET /api/v1/books` retornava 500 no PostgreSQL | as buscas usavam `where :q is null or lower(...)`; com parâmetro nulo o PostgreSQL inferia `bytea` (`function lower(bytea) does not exist`). Livros, usuários e categorias passaram a ter caminho sem filtro (`findAll`/`findPageIds`) e a query de busca só recebe termo preenchido; os filtros opcionais do `UPDATE` de preço usam `cast` explícito | ✅ feito |
+| Rota `/adm` retornava 404 no Static Site | rewrite `/* -> /index.html` documentado e declarado no `render.yaml` (serviços criados pelo painel precisam da regra manual, com action **Rewrite**) | ✅ feito |
+| Banco sem movimentações para a apresentação | migration `V14__seed_demo_movements.sql` cria categorias com hierarquia, vínculos N:N, 14 empréstimos (devolvidos, ativos e em atraso), 3 multas (uma paga e duas pendentes), 6 vendas com itens e total recalculado, 4 reservas e ajusta o estoque físico pelas unidades retidas | ✅ feito |
+
+**Verificação executada nesta rodada** (PostgreSQL 16 local, perfil `docker`):
+
+```text
+flyway              -> 14 migrations aplicadas, schema em v14
+GET /api/v1/books   -> 200 (8 livros, com e sem parâmetro de busca)
+GET /api/v1/reports/* -> 200 com dados (5 empréstimos ativos, 2 atrasados, 2 multas pendentes)
+backend : mvn test  -> 81 testes, BUILD SUCCESS
+frontend: lint/typecheck/test/build -> OK
+```
