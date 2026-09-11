@@ -1,24 +1,20 @@
 ---
 name: Bug report
-about: Reportar um bug encontrado no projeto
+about: Reportar um comportamento incorreto
+title: "[bug] "
+labels: bug
 ---
 
-**Descrição**
+## Descricao do bug
 
-Explique o que aconteceu e como reproduzir.
+O que aconteceu e o que era esperado.
 
-**Passos para reproduzir**
+## Passos para reproduzir
 
-1. 
-2. 
-3. 
+1. ...
+2. ...
 
-**Comportamento esperado**
+## Ambiente
 
-**Ambiente**
-- Versão do Java / Node
-- Sistema operacional
-
-**Logs / Stacktrace**
-
-Cole aqui trechos relevantes
+- Modulo: backend / frontend
+- Perfil / ambiente: local / docker / render

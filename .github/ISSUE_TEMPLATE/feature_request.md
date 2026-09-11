@@ -1,16 +1,18 @@
 ---
 name: Feature request
-about: Sugerir uma melhoria ou nova funcionalidade
+about: Sugerir uma nova funcionalidade ou melhoria
+title: "[feat] "
+labels: enhancement
 ---
 
-**Resumo**
+## Problema / motivacao
 
-Descreva a funcionalidade proposta.
+Qual necessidade essa funcionalidade atende.
 
-**Motivação**
+## Solucao proposta
 
-Por que isso é importante? Qual problema resolve?
+Descreva a solucao desejada.
 
-**Exemplo de uso / detalhes**
+## Alternativas consideradas
 
-Indique sketches, endpoints ou fluxos esperados.
+Outras abordagens avaliadas, se houver.

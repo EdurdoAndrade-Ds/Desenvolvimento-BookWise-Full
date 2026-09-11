@@ -22,3 +22,4 @@ Thumbs.db
 # Ambiente
 .env
 .env.local
+.pdftmp/

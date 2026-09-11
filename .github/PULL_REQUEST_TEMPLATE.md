@@ -1,16 +1,17 @@
-## Descrição
+## Descricao
 
-Descreva sucintamente as mudanças implementadas e o motivo.
+Descreva sucintamente as mudancas implementadas e o motivo.
+
+## Tipo de mudanca
+
+- [ ] Bugfix
+- [ ] Feature
+- [ ] Docs
+- [ ] Chore / infra
 
 ## Checklist
 
 - [ ] Rodei os testes do backend (`mvn verify`) localmente
 - [ ] Rodei a build do frontend (`npm ci && npm run build`) localmente
-- [ ] Atualizei a documentação quando necessário
+- [ ] Atualizei a documentacao quando necessario
 - [ ] Adicionei reviewers apropriados
-
-## Tipo de mudança
-- Bugfix
-- Feature
-- Docs
-- Chore
