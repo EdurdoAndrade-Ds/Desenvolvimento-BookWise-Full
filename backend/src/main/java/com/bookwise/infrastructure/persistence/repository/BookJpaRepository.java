@@ -19,10 +19,12 @@ import org.springframework.data.repository.query.Param;
  */
 public interface BookJpaRepository extends JpaRepository<BookEntity, Long> {
 
+    @Query("select b.id from BookEntity b")
+    Page<Long> findPageIds(Pageable pageable);
+
     @Query("""
             select b.id from BookEntity b
-            where :q is null
-               or lower(b.title) like lower(concat('%', :q, '%'))
+            where lower(b.title) like lower(concat('%', :q, '%'))
                or lower(b.author) like lower(concat('%', :q, '%'))
                or lower(b.isbn) like lower(concat('%', :q, '%'))
                or lower(b.genre) like lower(concat('%', :q, '%'))
@@ -41,6 +43,8 @@ public interface BookJpaRepository extends JpaRepository<BookEntity, Long> {
      * Multiplica o preco dos livros selecionados pelo fator informado
      * (0.92 aplica 8% de desconto), arredondando para duas casas. Os filtros
      * sao opcionais e combinaveis: id do livro, categoria e trecho do titulo.
+     * Os parametros opcionais sao convertidos com {@code cast} porque o
+     * PostgreSQL precisa do tipo declarado para comparar um parametro nulo.
      *
      * @return quantidade de livros atualizados
      */
@@ -49,12 +53,13 @@ public interface BookJpaRepository extends JpaRepository<BookEntity, Long> {
             update books
                set price = round(price * :factor, 2)
              where price is not null
-               and (:bookId is null or id = :bookId)
-               and (:titlePattern is null or lower(title) like lower(:titlePattern))
-               and (:categoryId is null or exists (
+               and (cast(:bookId as bigint) is null or id = cast(:bookId as bigint))
+               and (cast(:titlePattern as varchar) is null
+                    or lower(title) like lower(cast(:titlePattern as varchar)))
+               and (cast(:categoryId as bigint) is null or exists (
                      select 1 from book_categories bc
                       where bc.book_id = books.id
-                        and bc.category_id = :categoryId))
+                        and bc.category_id = cast(:categoryId as bigint)))
             """, nativeQuery = true)
     int applyPriceFactor(
             @Param("factor") BigDecimal factor,

@@ -43,9 +43,10 @@ public class CategoryRepositoryAdapter implements CategoryRepository {
 
     @Override
     public PageResult<Category> search(String query, int page, int size) {
-        String normalized = (query == null || query.isBlank()) ? null : query.trim();
-        Page<CategoryEntity> result = jpaRepository.search(
-                normalized, PageRequest.of(page, size, Sort.by("name")));
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("name"));
+        Page<CategoryEntity> result = (query == null || query.isBlank())
+                ? jpaRepository.findAll(pageRequest)
+                : jpaRepository.search(query.trim(), pageRequest);
         List<Category> content = result.getContent().stream()
                 .map(CategoryEntityMapper::toDomain)
                 .toList();

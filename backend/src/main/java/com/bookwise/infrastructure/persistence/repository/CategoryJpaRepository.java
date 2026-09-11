@@ -14,8 +14,7 @@ public interface CategoryJpaRepository extends JpaRepository<CategoryEntity, Lon
 
     @Query("""
             select c from CategoryEntity c
-            where :q is null
-               or lower(c.name) like lower(concat('%', :q, '%'))
+            where lower(c.name) like lower(concat('%', :q, '%'))
                or lower(c.description) like lower(concat('%', :q, '%'))
             """)
     Page<CategoryEntity> search(@Param("q") String q, Pageable pageable);

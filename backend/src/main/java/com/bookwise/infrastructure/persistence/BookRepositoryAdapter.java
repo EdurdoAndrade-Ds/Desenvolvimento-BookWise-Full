@@ -56,8 +56,10 @@ public class BookRepositoryAdapter implements BookRepository {
 
     @Override
     public PageResult<Book> search(String query, int page, int size) {
-        String normalized = (query == null || query.isBlank()) ? null : query.trim();
-        var idsPage = jpaRepository.searchPageIds(normalized, PageRequest.of(page, size));
+        PageRequest pageRequest = PageRequest.of(page, size);
+        var idsPage = (query == null || query.isBlank())
+                ? jpaRepository.findPageIds(pageRequest)
+                : jpaRepository.searchPageIds(query.trim(), pageRequest);
         List<Long> ids = idsPage.getContent();
         Map<Long, BookEntity> entitiesById = new HashMap<>();
         if (!ids.isEmpty()) {

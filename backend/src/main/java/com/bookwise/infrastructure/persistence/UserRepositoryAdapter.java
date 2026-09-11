@@ -40,8 +40,10 @@ public class UserRepositoryAdapter implements UserRepository {
 
     @Override
     public PageResult<User> search(String query, int page, int size) {
-        String normalized = (query == null || query.isBlank()) ? null : query.trim();
-        Page<UserEntity> result = jpaRepository.search(normalized, PageRequest.of(page, size));
+        PageRequest pageRequest = PageRequest.of(page, size);
+        Page<UserEntity> result = (query == null || query.isBlank())
+                ? jpaRepository.findAll(pageRequest)
+                : jpaRepository.search(query.trim(), pageRequest);
         List<User> content = result.getContent().stream()
                 .map(UserEntityMapper::toDomain)
                 .toList();
