@@ -94,7 +94,7 @@ class SaleServiceTest {
 
     private Book book(Integer stock) {
         return new Book(10L, "Book", "Author", "isbn", "Genre", 2024,
-                BookFormat.PHYSICAL, new BigDecimal("10.00"), stock, List.of(), null);
+                BookFormat.PHYSICAL, new BigDecimal("10.00"), stock, null, List.of(), null);
     }
 
     private Sale sale(Long bookId, int quantity) {

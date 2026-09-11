@@ -35,5 +35,8 @@ public record BookRequest(
         @PositiveOrZero(message = "O estoque nao pode ser negativo")
         Integer stock,
 
+        @Size(max = 500, message = "A URL da capa deve ter no maximo 500 caracteres")
+        String coverUrl,
+
         List<Long> categoryIds) {
 }

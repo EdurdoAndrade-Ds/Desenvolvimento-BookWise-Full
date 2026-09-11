@@ -178,14 +178,22 @@ public class DataSeeder implements CommandLineRunner {
             return;
         }
         List<Book> seed = List.of(
-                book("Clean Code", "Robert C. Martin", "9780132350884", "Tecnologia", 2008, BookFormat.PHYSICAL, "189.90", 12),
-                book("Refactoring", "Martin Fowler", "9780134757599", "Tecnologia", 2018, BookFormat.PHYSICAL, "219.90", 7),
-                book("O Senhor dos Aneis", "J.R.R. Tolkien", "9788533613379", "Fantasia", 1954, BookFormat.PHYSICAL, "149.90", 20),
-                book("O Hobbit", "J.R.R. Tolkien", "9788595084759", "Fantasia", 1937, BookFormat.DIGITAL, "39.90", 0),
-                book("Duna", "Frank Herbert", "9788576572123", "Ficcao Cientifica", 1965, BookFormat.PHYSICAL, "89.90", 15),
-                book("1984", "George Orwell", "9788535914849", "Ficcao Cientifica", 1949, BookFormat.DIGITAL, "29.90", 0),
-                book("Domain-Driven Design", "Eric Evans", "9780321125217", "Tecnologia", 2003, BookFormat.PHYSICAL, "259.90", 3),
-                book("The Pragmatic Programmer", "Andrew Hunt", "9780135957059", "Tecnologia", 1999, BookFormat.PHYSICAL, "199.90", 9));
+                book("Clean Code", "Robert C. Martin", "9780132350884", "Tecnologia", 2008, BookFormat.PHYSICAL, "189.90", 12,
+                        cover("8065615", "L")),
+                book("Refactoring", "Martin Fowler", "9780134757599", "Tecnologia", 2018, BookFormat.PHYSICAL, "219.90", 7,
+                        cover("7087623", "M")),
+                book("O Senhor dos Aneis", "J.R.R. Tolkien", "9788533613379", "Fantasia", 1954, BookFormat.PHYSICAL, "149.90", 20,
+                        cover("14625765", "L")),
+                book("O Hobbit", "J.R.R. Tolkien", "9788595084759", "Fantasia", 1937, BookFormat.DIGITAL, "39.90", 0,
+                        cover("14627509", "L")),
+                book("Duna", "Frank Herbert", "9788576572123", "Ficcao Cientifica", 1965, BookFormat.PHYSICAL, "89.90", 15,
+                        cover("15158720", "L")),
+                book("1984", "George Orwell", "9788535914849", "Ficcao Cientifica", 1949, BookFormat.DIGITAL, "29.90", 0,
+                        cover("15200523", "L")),
+                book("Domain-Driven Design", "Eric Evans", "9780321125217", "Tecnologia", 2003, BookFormat.PHYSICAL, "259.90", 3,
+                        cover("5548424", "M")),
+                book("The Pragmatic Programmer", "Andrew Hunt", "9780135957059", "Tecnologia", 1999, BookFormat.PHYSICAL, "199.90", 9,
+                        cover("10143650", "L")));
         seed.forEach(bookRepository::save);
         log.info("DataSeeder: {} livros de exemplo inseridos.", seed.size());
     }
@@ -303,6 +311,11 @@ public class DataSeeder implements CommandLineRunner {
         return books.stream().filter(b -> b.title().contains(titlePart)).findFirst().orElseThrow();
     }
 
+    /** Monta a URL publica da capa hospedada na Open Library. */
+    private String cover(String coverId, String size) {
+        return "https://covers.openlibrary.org/b/id/" + coverId + "-" + size + ".jpg";
+    }
+
     private Book book(
             String title,
             String author,
@@ -311,10 +324,11 @@ public class DataSeeder implements CommandLineRunner {
             int publishedYear,
             BookFormat format,
             String price,
-            int stock) {
+            int stock,
+            String coverUrl) {
         return new Book(
                 null, title, author, isbn, genre, publishedYear, format, new BigDecimal(price), stock,
-                List.of(), null);
+                coverUrl, List.of(), null);
     }
 
     private User user(String name, String email, UserRole role) {

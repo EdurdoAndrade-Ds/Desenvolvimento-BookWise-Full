@@ -337,7 +337,7 @@ class LoanServiceTest {
 
     private Book book(BookFormat format, Integer stock) {
         return new Book(10L, "Book", "Author", "isbn", "Genre", 2024,
-                format, new BigDecimal("10.00"), stock, List.of(), null);
+                format, new BigDecimal("10.00"), stock, null, List.of(), null);
     }
 
     private Loan loan(LocalDate dueDate, LocalDate returnDate) {

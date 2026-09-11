@@ -18,6 +18,7 @@ public record BookResponse(
         BookFormat format,
         BigDecimal price,
         Integer stock,
+        String coverUrl,
         List<CategoryRefResponse> categories,
         OffsetDateTime createdAt) {
 }

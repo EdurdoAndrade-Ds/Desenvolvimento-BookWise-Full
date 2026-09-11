@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { ArrowLeft, BookOpen, CheckCircle2, ShoppingCart } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, ShoppingCart } from 'lucide-react';
+import BookCover from '../../components/BookCover';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import type { Book } from '../../types/api';
 import { booksService } from '../../services/booksService';
@@ -138,9 +139,11 @@ export default function BookDetailPage() {
       )}
 
       <div className="grid gap-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-[minmax(16rem,24rem)_1fr] md:p-10 dark:border-slate-800 dark:bg-slate-900">
-        <div className="flex min-h-72 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-100 to-slate-100 text-brand-600 dark:from-brand-950 dark:to-slate-800 dark:text-brand-300">
-          <BookOpen className="h-32 w-32" />
-        </div>
+        <BookCover
+          book={book}
+          className="min-h-72 rounded-2xl"
+          iconClassName="h-32 w-32"
+        />
 
         <div className="flex flex-col">
           <div>

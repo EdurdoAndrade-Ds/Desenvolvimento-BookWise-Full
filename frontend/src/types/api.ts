@@ -31,6 +31,7 @@ export interface Book {
   format: BookFormat;
   price?: number;
   stock?: number;
+  coverUrl?: string;
   categories?: CategoryRef[];
   createdAt?: string;
 }

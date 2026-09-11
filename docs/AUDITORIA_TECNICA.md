@@ -425,3 +425,23 @@ GET /api/v1/reports/* -> 200 com dados (5 empréstimos ativos, 2 atrasados, 2 mu
 backend : mvn test  -> 81 testes, BUILD SUCCESS
 frontend: lint/typecheck/test/build -> OK
 ```
+
+## 15. Capas dos livros (Fase 9)
+
+| Ponto | Correção aplicada | Status |
+|---|---|---|
+| Catálogo exibia apenas um ícone no lugar da capa | novo campo `coverUrl` no domínio, na entidade (`books.cover_url`), nos DTOs e no OpenAPI; migration `V15__book_add_cover_url.sql` cria a coluna e preenche as capas públicas dos 8 livros do seed | ✅ feito |
+| Sem storage para imagens | o banco guarda apenas a URL pública (`VARCHAR(500)`); os arquivos ficam hospedados fora (Open Library ou qualquer link informado), sem consumo de disco no Render | ✅ feito |
+| Exibição e fallback | componente `BookCover` usa `coverUrl`, cai para `https://covers.openlibrary.org/b/isbn/<isbn>-L.jpg` e, se nenhuma imagem carregar, renderiza o ícone `BookOpen`; aplicado no catálogo, no detalhe do livro e na listagem do admin | ✅ feito |
+| Manutenção da capa | o formulário de edição do admin tem o campo "URL da capa", persistido por `PUT /api/v1/books/{id}` | ✅ feito |
+
+**Verificação executada nesta rodada** (PostgreSQL 16 local, perfil `docker`, base criada do zero):
+
+```text
+flyway              -> 15 migrations aplicadas, schema em v15
+books.cover_url     -> 8 livros com URL preenchida (casadas por ISBN)
+GET /api/v1/books   -> 200 retornando coverUrl
+catálogo/admin      -> capas renderizadas; livros sem imagem disponível caem no ícone
+backend : mvn test  -> 81 testes, BUILD SUCCESS
+frontend: lint/typecheck/test/build -> OK
+```

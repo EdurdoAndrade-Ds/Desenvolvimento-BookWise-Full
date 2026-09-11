@@ -40,6 +40,7 @@ public final class BookMapper {
                 request.format(),
                 request.price(),
                 request.stock(),
+                request.coverUrl(),
                 toRefs(request.categoryIds()),
                 null);
     }
@@ -58,6 +59,7 @@ public final class BookMapper {
                 book.format(),
                 book.price(),
                 book.stock(),
+                book.coverUrl(),
                 categories,
                 book.createdAt());
     }

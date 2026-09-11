@@ -59,6 +59,9 @@ public class BookEntity {
 
     private Integer stock;
 
+    @Column(name = "cover_url", length = 500)
+    private String coverUrl;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 

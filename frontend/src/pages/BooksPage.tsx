@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Plus, Search, Trash2, Pencil, Percent, BookOpen, RefreshCw } from 'lucide-react';
+import BookCover from '../components/BookCover';
 import type { Book, Page } from '../types/api';
 import { booksService, type PriceAdjustmentResult } from '../services/booksService';
 import { ApiError } from '../services/http';
@@ -132,6 +133,7 @@ export default function BooksPage() {
           <table className="w-full text-left text-sm">
             <thead className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800">
               <tr>
+                <th className="px-6 py-3 font-medium">Capa</th>
                 <th className="px-6 py-3 font-medium">Título</th>
                 <th className="px-6 py-3 font-medium">Autor</th>
                 <th className="px-6 py-3 font-medium">Gênero</th>
@@ -147,6 +149,13 @@ export default function BooksPage() {
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {data?.content.map((book) => (
                 <tr key={book.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                  <td className="px-6 py-3">
+                    <BookCover
+                      book={book}
+                      className="h-14 w-10 rounded"
+                      iconClassName="h-5 w-5"
+                    />
+                  </td>
                   <td className="px-6 py-3 font-medium text-slate-800 dark:text-slate-100">
                     {book.title}
                   </td>

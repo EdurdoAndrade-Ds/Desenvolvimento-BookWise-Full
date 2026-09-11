@@ -23,6 +23,7 @@ function toInput(book?: Book): BookInput {
       format: 'PHYSICAL',
       price: undefined,
       stock: undefined,
+      coverUrl: '',
       categoryIds: [],
     };
   }
@@ -35,6 +36,7 @@ function toInput(book?: Book): BookInput {
     format: book.format,
     price: book.price ?? undefined,
     stock: book.stock ?? undefined,
+    coverUrl: book.coverUrl ?? '',
     categoryIds: (book.categories ?? []).map((c) => c.id),
   };
 }
@@ -173,6 +175,16 @@ export default function BookFormModal({ onClose, onSaved, book }: BookFormModalP
               />
             </Field>
           </div>
+
+          <Field label="URL da capa">
+            <input
+              type="url"
+              value={form.coverUrl ?? ''}
+              onChange={(e) => update('coverUrl', e.target.value)}
+              placeholder="https://.../capa.jpg"
+              className={inputClass}
+            />
+          </Field>
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Preço (R$)">

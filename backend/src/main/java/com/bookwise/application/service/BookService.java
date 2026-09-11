@@ -96,6 +96,7 @@ public class BookService {
                 request.format(),
                 request.price(),
                 request.stock(),
+                request.coverUrl(),
                 BookMapper.toRefs(request.categoryIds()));
         return BookMapper.toResponse(repository.save(updated));
     }

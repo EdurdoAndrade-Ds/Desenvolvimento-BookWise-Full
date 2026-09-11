@@ -10,6 +10,7 @@ export interface BookInput {
   format: Book['format'];
   price?: number;
   stock?: number;
+  coverUrl?: string;
   categoryIds?: number[];
 }
 

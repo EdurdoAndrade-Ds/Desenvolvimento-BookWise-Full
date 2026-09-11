@@ -17,6 +17,7 @@ public record Book(
         BookFormat format,
         BigDecimal price,
         Integer stock,
+        String coverUrl,
         List<CategoryRef> categories,
         OffsetDateTime createdAt) {
 
@@ -33,9 +34,10 @@ public record Book(
             BookFormat format,
             BigDecimal price,
             Integer stock,
+            String coverUrl,
             List<CategoryRef> categories) {
         return new Book(
-                this.id, title, author, isbn, genre, publishedYear, format, price, stock,
+                this.id, title, author, isbn, genre, publishedYear, format, price, stock, coverUrl,
                 categories, this.createdAt);
     }
 
@@ -43,13 +45,13 @@ public record Book(
     public Book withStock(Integer newStock) {
         return new Book(
                 this.id, this.title, this.author, this.isbn, this.genre, this.publishedYear,
-                this.format, this.price, newStock, this.categories, this.createdAt);
+                this.format, this.price, newStock, this.coverUrl, this.categories, this.createdAt);
     }
 
     /** Copia deste livro com novas categorias associadas. */
     public Book withCategories(List<CategoryRef> newCategories) {
         return new Book(
                 this.id, this.title, this.author, this.isbn, this.genre, this.publishedYear,
-                this.format, this.price, this.stock, newCategories, this.createdAt);
+                this.format, this.price, this.stock, this.coverUrl, newCategories, this.createdAt);
     }
 }
