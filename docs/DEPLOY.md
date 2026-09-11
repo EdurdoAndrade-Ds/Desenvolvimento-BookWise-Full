@@ -267,8 +267,15 @@ As duas variaveis abaixo ligam os dois servicos:
 `VITE_API_URL` e lida em tempo de **build**: depois de alterar a variavel no
 Static Site e preciso disparar um novo deploy para o valor entrar no bundle.
 
-Sem `VITE_API_URL` o frontend continua usando caminhos relativos `/api/...`, o
-que e o comportamento usado em desenvolvimento (proxy do Vite) e na imagem unica.
+O build de producao ja tem um padrao em `frontend/.env.production`
+(`VITE_API_URL=https://desenvolvimento-bookwise-full.onrender.com`), usado quando
+o Static Site nao define a variavel; a variavel do painel sobrescreve o arquivo.
+Se o valor nao entrar no bundle, o frontend chama `/api/...` na propria origem do
+site estatico e o Render responde `404 Not Found` — foi exatamente o erro visto em
+`https://desenvolvimento-bookwise-full-1.onrender.com/api/v1/books`.
+
+Em desenvolvimento nao existe `VITE_API_URL` e os caminhos relativos `/api/...`
+sao resolvidos pelo proxy do Vite (e pela imagem unica em producao).
 Sem `CORS_ALLOWED_ORIGINS` o backend nao publica nenhuma regra de CORS, entao o
 Static Site recebe erro de origem no navegador.
 
