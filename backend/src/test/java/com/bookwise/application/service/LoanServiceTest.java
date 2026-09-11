@@ -10,6 +10,9 @@ import static org.mockito.Mockito.when;
 import com.bookwise.application.dto.LoanItemRequest;
 import com.bookwise.application.dto.LoanRequest;
 import com.bookwise.application.dto.LoanResponse;
+import com.bookwise.application.policy.FinePolicy;
+import com.bookwise.application.policy.StockPolicy;
+import com.bookwise.config.BusinessProperties;
 import com.bookwise.domain.exception.BookNotFoundException;
 import com.bookwise.domain.exception.BusinessException;
 import com.bookwise.domain.exception.UserNotFoundException;
@@ -39,6 +42,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class LoanServiceTest {
 
+    private static final int DEFAULT_DAYS = 14;
+    private static final int MAX_ACTIVE_PER_USER = 5;
+    private static final int MAX_ITEMS_PER_LOAN = 5;
+    private static final int MAX_RENEWALS = 2;
+    private static final int RENEWAL_DAYS = 7;
+
     @Mock
     private LoanRepository loanRepository;
 
@@ -55,7 +64,14 @@ class LoanServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new LoanService(loanRepository, userRepository, bookRepository, fineRepository);
+        BusinessProperties properties = properties(MAX_RENEWALS);
+        service = new LoanService(
+                loanRepository,
+                userRepository,
+                bookRepository,
+                new StockPolicy(bookRepository),
+                new FinePolicy(fineRepository, properties),
+                properties);
     }
 
     @Test
@@ -122,7 +138,87 @@ class LoanServiceTest {
 
         LoanResponse response = service.create(request(null, book.id(), 1));
 
-        assertEquals(LocalDate.now().plusDays(14), response.dueDate());
+        assertEquals(LocalDate.now().plusDays(DEFAULT_DAYS), response.dueDate());
+    }
+
+    @Test
+    void createShouldRejectMoreItemsThanAllowedPerLoan() {
+        User user = user();
+        when(userRepository.findById(user.id())).thenReturn(Optional.of(user));
+
+        assertThrows(
+                BusinessException.class,
+                () -> service.create(request(null, 10L, MAX_ITEMS_PER_LOAN + 1)));
+
+        verify(bookRepository, never()).findById(any());
+    }
+
+    @Test
+    void createShouldRejectWhenUserReachedMaxActiveLoans() {
+        User user = user();
+        when(userRepository.findById(user.id())).thenReturn(Optional.of(user));
+        when(loanRepository.countOpenByUserId(user.id())).thenReturn((long) MAX_ACTIVE_PER_USER);
+
+        assertThrows(BusinessException.class, () -> service.create(request(null, 10L, 1)));
+
+        verify(loanRepository, never()).save(any(Loan.class));
+    }
+
+    @Test
+    void createShouldRejectWhenUserHasPendingFine() {
+        User user = user();
+        when(userRepository.findById(user.id())).thenReturn(Optional.of(user));
+        when(fineRepository.existsPendingByUserId(user.id())).thenReturn(true);
+
+        assertThrows(BusinessException.class, () -> service.create(request(null, 10L, 1)));
+
+        verify(loanRepository, never()).save(any(Loan.class));
+    }
+
+    @Test
+    void renewShouldExtendDueDateAndIncrementCounter() {
+        LocalDate dueDate = LocalDate.now().plusDays(3);
+        Loan loan = loan(dueDate, null);
+        when(loanRepository.findById(loan.id())).thenReturn(Optional.of(loan));
+        when(loanRepository.save(any(Loan.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LoanResponse response = service.renew(loan.id());
+
+        assertEquals(dueDate.plusDays(RENEWAL_DAYS), response.dueDate());
+        assertEquals(1, response.renewalCount());
+    }
+
+    @Test
+    void renewShouldRejectWhenMaxRenewalsReached() {
+        Loan loan = new Loan(20L, 1L, "Reader", List.of(new LoanItem(10L, "Book", 1)),
+                LocalDate.now(), LocalDate.now().plusDays(3), null, MAX_RENEWALS, null);
+        when(loanRepository.findById(loan.id())).thenReturn(Optional.of(loan));
+
+        assertThrows(BusinessException.class, () -> service.renew(loan.id()));
+    }
+
+    @Test
+    void renewShouldRejectOverdueLoan() {
+        Loan loan = loan(LocalDate.now().minusDays(1), null);
+        when(loanRepository.findById(loan.id())).thenReturn(Optional.of(loan));
+
+        assertThrows(BusinessException.class, () -> service.renew(loan.id()));
+    }
+
+    @Test
+    void renewShouldRejectWhenRenewalIsDisabled() {
+        BusinessProperties disabled = properties(0);
+        LoanService noRenewal = new LoanService(
+                loanRepository,
+                userRepository,
+                bookRepository,
+                new StockPolicy(bookRepository),
+                new FinePolicy(fineRepository, disabled),
+                disabled);
+        Loan loan = loan(LocalDate.now().plusDays(3), null);
+        when(loanRepository.findById(loan.id())).thenReturn(Optional.of(loan));
+
+        assertThrows(BusinessException.class, () -> noRenewal.renew(loan.id()));
     }
 
     @Test
@@ -133,6 +229,7 @@ class LoanServiceTest {
         when(loanRepository.findById(loan.id())).thenReturn(Optional.of(loan));
         when(bookRepository.findById(book.id())).thenReturn(Optional.of(book));
         when(loanRepository.save(any(Loan.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(fineRepository.save(any(Fine.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         service.returnLoan(loan.id());
 
@@ -160,7 +257,7 @@ class LoanServiceTest {
     void returnLoanShouldNotDuplicateExistingFine() {
         Loan loan = loan(LocalDate.now().minusDays(1), null);
         when(loanRepository.findById(loan.id())).thenReturn(Optional.of(loan));
-        when(fineRepository.existsByLoanId(loan.id())).thenReturn(true);
+        when(fineRepository.findByLoanId(loan.id())).thenReturn(Optional.of(pendingFine(1)));
         when(loanRepository.save(any(Loan.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         service.returnLoan(loan.id());
@@ -174,6 +271,60 @@ class LoanServiceTest {
         when(loanRepository.findById(loan.id())).thenReturn(Optional.of(loan));
 
         assertThrows(BusinessException.class, () -> service.returnLoan(loan.id()));
+    }
+
+    @Test
+    void chargeOverdueLoansShouldCreateFineForOpenLoanStillNotReturned() {
+        LocalDate reference = LocalDate.now();
+        Loan loan = loan(reference.minusDays(3), null);
+        when(loanRepository.findOpenOverdue(reference)).thenReturn(List.of(loan));
+        when(fineRepository.save(any(Fine.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertEquals(1, service.chargeOverdueLoans(reference));
+
+        ArgumentCaptor<Fine> fineCaptor = ArgumentCaptor.forClass(Fine.class);
+        verify(fineRepository).save(fineCaptor.capture());
+        assertEquals(new BigDecimal("6.00"), fineCaptor.getValue().value());
+        assertEquals(3, fineCaptor.getValue().daysLate());
+    }
+
+    @Test
+    void chargeOverdueLoansShouldUpdatePendingFineWhenDelayIncreases() {
+        LocalDate reference = LocalDate.now();
+        Loan loan = loan(reference.minusDays(4), null);
+        when(loanRepository.findOpenOverdue(reference)).thenReturn(List.of(loan));
+        when(fineRepository.findByLoanId(loan.id())).thenReturn(Optional.of(pendingFine(2)));
+        when(fineRepository.save(any(Fine.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        service.chargeOverdueLoans(reference);
+
+        ArgumentCaptor<Fine> fineCaptor = ArgumentCaptor.forClass(Fine.class);
+        verify(fineRepository).save(fineCaptor.capture());
+        assertEquals(new BigDecimal("8.00"), fineCaptor.getValue().value());
+        assertEquals(4, fineCaptor.getValue().daysLate());
+    }
+
+    @Test
+    void chargeOverdueLoansShouldKeepPaidFineUntouched() {
+        LocalDate reference = LocalDate.now();
+        Loan loan = loan(reference.minusDays(6), null);
+        Fine paid = new Fine(30L, loan.id(), "Reader", new BigDecimal("4.00"), 2,
+                FinePaymentStatus.PAID, reference, null);
+        when(loanRepository.findOpenOverdue(reference)).thenReturn(List.of(loan));
+        when(fineRepository.findByLoanId(loan.id())).thenReturn(Optional.of(paid));
+
+        service.chargeOverdueLoans(reference);
+
+        verify(fineRepository, never()).save(any(Fine.class));
+    }
+
+    private BusinessProperties properties(int maxRenewals) {
+        return new BusinessProperties(
+                new BusinessProperties.Loan(
+                        DEFAULT_DAYS, MAX_ACTIVE_PER_USER, MAX_ITEMS_PER_LOAN, true, maxRenewals, RENEWAL_DAYS),
+                new BusinessProperties.Fine(new BigDecimal("2.00")),
+                new BusinessProperties.Reservation(7, true),
+                new BusinessProperties.Report(3, 7, 5));
     }
 
     private LoanRequest request(LocalDate dueDate, Long bookId, int quantity) {
@@ -192,6 +343,12 @@ class LoanServiceTest {
     private Loan loan(LocalDate dueDate, LocalDate returnDate) {
         return new Loan(20L, 1L, "Reader",
                 List.of(new LoanItem(10L, "Book", 2)),
-                dueDate.minusDays(14), dueDate, returnDate, null);
+                dueDate.minusDays(DEFAULT_DAYS), dueDate, returnDate, 0, null);
+    }
+
+    private Fine pendingFine(int daysLate) {
+        return new Fine(30L, 20L, "Reader",
+                new BigDecimal("2.00").multiply(BigDecimal.valueOf(daysLate)), daysLate,
+                FinePaymentStatus.PENDING, null, null);
     }
 }

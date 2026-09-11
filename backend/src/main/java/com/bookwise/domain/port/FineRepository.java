@@ -22,5 +22,11 @@ public interface FineRepository {
 
     boolean existsByLoanId(Long loanId);
 
+    /** Multa vinculada ao emprestimo (relacao 1:1), se existir. */
+    Optional<Fine> findByLoanId(Long loanId);
+
+    /** Indica se o usuario possui alguma multa com pagamento pendente. */
+    boolean existsPendingByUserId(Long userId);
+
     long count();
 }

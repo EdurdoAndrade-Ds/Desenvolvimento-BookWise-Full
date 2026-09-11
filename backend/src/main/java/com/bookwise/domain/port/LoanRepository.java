@@ -2,6 +2,7 @@ package com.bookwise.domain.port;
 
 import com.bookwise.domain.model.Loan;
 import com.bookwise.domain.page.PageResult;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,6 +22,12 @@ public interface LoanRepository {
 
     /** Todos os emprestimos (uso em agregacoes/estatisticas com volume pequeno). */
     List<Loan> findAll();
+
+    /** Quantidade de emprestimos em aberto (sem devolucao) do usuario. */
+    long countOpenByUserId(Long userId);
+
+    /** Emprestimos em aberto cuja data prevista de devolucao ja passou. */
+    List<Loan> findOpenOverdue(LocalDate reference);
 
     long count();
 }

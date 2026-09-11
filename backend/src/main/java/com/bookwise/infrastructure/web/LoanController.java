@@ -58,6 +58,12 @@ public class LoanController {
                 .body(created);
     }
 
+    @PostMapping("/{id}/renew")
+    @Operation(summary = "Renova um emprestimo em aberto")
+    public LoanResponse renew(@PathVariable Long id) {
+        return service.renew(id);
+    }
+
     @PostMapping("/{id}/return")
     @Operation(summary = "Registra a devolucao de um emprestimo")
     public LoanResponse returnLoan(@PathVariable Long id) {

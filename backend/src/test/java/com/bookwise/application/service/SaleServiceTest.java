@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 
 import com.bookwise.application.dto.SaleItemRequest;
 import com.bookwise.application.dto.SaleRequest;
+import com.bookwise.application.policy.StockPolicy;
 import com.bookwise.domain.exception.BusinessException;
 import com.bookwise.domain.model.Book;
 import com.bookwise.domain.model.BookFormat;
@@ -44,7 +45,8 @@ class SaleServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new SaleService(saleRepository, userRepository, bookRepository);
+        service = new SaleService(
+                saleRepository, userRepository, bookRepository, new StockPolicy(bookRepository));
     }
 
     @Test

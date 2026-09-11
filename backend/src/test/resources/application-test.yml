@@ -10,3 +10,7 @@ spring:
       ddl-auto: create-drop
   flyway:
     enabled: false
+
+bookwise:
+  jobs:
+    enabled: false

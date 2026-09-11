@@ -1,6 +1,7 @@
 package com.bookwise.infrastructure.persistence;
 
 import com.bookwise.domain.model.Fine;
+import com.bookwise.domain.model.FinePaymentStatus;
 import com.bookwise.domain.page.PageResult;
 import com.bookwise.domain.port.FineRepository;
 import com.bookwise.infrastructure.persistence.entity.FineEntity;
@@ -67,6 +68,16 @@ public class FineRepositoryAdapter implements FineRepository {
     @Override
     public boolean existsByLoanId(Long loanId) {
         return jpaRepository.existsByLoanId(loanId);
+    }
+
+    @Override
+    public Optional<Fine> findByLoanId(Long loanId) {
+        return jpaRepository.findByLoanId(loanId).map(FineEntityMapper::toDomain);
+    }
+
+    @Override
+    public boolean existsPendingByUserId(Long userId) {
+        return jpaRepository.existsByUserIdAndPaymentStatus(userId, FinePaymentStatus.PENDING);
     }
 
     @Override

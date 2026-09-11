@@ -2,6 +2,7 @@ package com.bookwise.domain.port;
 
 import com.bookwise.domain.model.Reservation;
 import com.bookwise.domain.page.PageResult;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -19,6 +20,9 @@ public interface ReservationRepository {
     PageResult<Reservation> findAllByUserId(Long userId, int page, int size);
 
     List<Reservation> findAll();
+
+    /** Reservas ativas cuja data de expiracao ja passou na data de referencia. */
+    List<Reservation> findActiveExpired(LocalDate reference);
 
     long count();
 }

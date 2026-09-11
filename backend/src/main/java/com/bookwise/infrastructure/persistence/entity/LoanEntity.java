@@ -46,6 +46,9 @@ public class LoanEntity {
     @Column(name = "return_date")
     private LocalDate returnDate;
 
+    @Column(name = "renewal_count", nullable = false)
+    private int renewalCount;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;
 

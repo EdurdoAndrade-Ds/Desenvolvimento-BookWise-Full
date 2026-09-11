@@ -26,6 +26,7 @@ final class LoanEntityMapper {
                 entity.getLoanDate(),
                 entity.getDueDate(),
                 entity.getReturnDate(),
+                entity.getRenewalCount(),
                 entity.getCreatedAt());
     }
 
@@ -40,6 +41,7 @@ final class LoanEntityMapper {
         entity.setLoanDate(loan.loanDate());
         entity.setDueDate(loan.dueDate());
         entity.setReturnDate(loan.returnDate());
+        entity.setRenewalCount(loan.renewalCount());
         if (loan.createdAt() != null) {
             entity.setCreatedAt(loan.createdAt());
         }

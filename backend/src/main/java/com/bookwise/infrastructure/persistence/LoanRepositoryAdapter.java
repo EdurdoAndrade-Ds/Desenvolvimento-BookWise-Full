@@ -5,6 +5,7 @@ import com.bookwise.domain.page.PageResult;
 import com.bookwise.domain.port.LoanRepository;
 import com.bookwise.infrastructure.persistence.entity.LoanEntity;
 import com.bookwise.infrastructure.persistence.repository.LoanJpaRepository;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,18 @@ public class LoanRepositoryAdapter implements LoanRepository {
     @Override
     public List<Loan> findAll() {
         return jpaRepository.findAll(NEWEST_FIRST).stream()
+                .map(LoanEntityMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public long countOpenByUserId(Long userId) {
+        return jpaRepository.countByUserIdAndReturnDateIsNull(userId);
+    }
+
+    @Override
+    public List<Loan> findOpenOverdue(LocalDate reference) {
+        return jpaRepository.findOpenOverdue(reference).stream()
                 .map(LoanEntityMapper::toDomain)
                 .toList();
     }

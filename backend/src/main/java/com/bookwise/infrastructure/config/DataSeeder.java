@@ -15,6 +15,7 @@ import com.bookwise.domain.model.SaleItem;
 import com.bookwise.domain.model.SaleStatus;
 import com.bookwise.domain.model.User;
 import com.bookwise.domain.model.UserRole;
+import com.bookwise.config.BusinessProperties;
 import com.bookwise.domain.port.BookRepository;
 import com.bookwise.domain.port.CategoryRepository;
 import com.bookwise.domain.port.FineRepository;
@@ -42,8 +43,6 @@ public class DataSeeder implements CommandLineRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DataSeeder.class);
 
-    private static final BigDecimal FINE_PER_DAY = new BigDecimal("2.00");
-
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
     private final LoanRepository loanRepository;
@@ -51,6 +50,7 @@ public class DataSeeder implements CommandLineRunner {
     private final CategoryRepository categoryRepository;
     private final ReservationRepository reservationRepository;
     private final FineRepository fineRepository;
+    private final BusinessProperties properties;
 
     public DataSeeder(
             BookRepository bookRepository,
@@ -59,7 +59,8 @@ public class DataSeeder implements CommandLineRunner {
             SaleRepository saleRepository,
             CategoryRepository categoryRepository,
             ReservationRepository reservationRepository,
-            FineRepository fineRepository) {
+            FineRepository fineRepository,
+            BusinessProperties properties) {
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
         this.loanRepository = loanRepository;
@@ -67,6 +68,7 @@ public class DataSeeder implements CommandLineRunner {
         this.categoryRepository = categoryRepository;
         this.reservationRepository = reservationRepository;
         this.fineRepository = fineRepository;
+        this.properties = properties;
     }
 
     @Override
@@ -118,7 +120,7 @@ public class DataSeeder implements CommandLineRunner {
                     && loan.returnDate().isAfter(loan.dueDate())
                     && !fineRepository.existsByLoanId(loan.id())) {
                 long daysLate = ChronoUnit.DAYS.between(loan.dueDate(), loan.returnDate());
-                BigDecimal value = FINE_PER_DAY.multiply(BigDecimal.valueOf(daysLate));
+                BigDecimal value = properties.fine().perDay().multiply(BigDecimal.valueOf(daysLate));
                 fineRepository.save(new Fine(
                         null, loan.id(), loan.userName(), value, (int) daysLate,
                         FinePaymentStatus.PENDING, null, null));
@@ -241,7 +243,7 @@ public class DataSeeder implements CommandLineRunner {
             return 0;
         }
         loanRepository.save(new Loan(
-                null, borrower.id(), borrower.name(), List.of(items), loanDate, dueDate, returnDate, null));
+                null, borrower.id(), borrower.name(), List.of(items), loanDate, dueDate, returnDate, 0, null));
         return 1;
     }
 

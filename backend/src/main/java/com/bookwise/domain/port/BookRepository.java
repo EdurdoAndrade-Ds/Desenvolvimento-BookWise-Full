@@ -1,7 +1,9 @@
 package com.bookwise.domain.port;
 
 import com.bookwise.domain.model.Book;
+import com.bookwise.domain.model.PriceAdjustment;
 import com.bookwise.domain.page.PageResult;
+import java.math.BigDecimal;
 import java.util.Optional;
 
 /**
@@ -24,4 +26,13 @@ public interface BookRepository {
     void deleteById(Long id);
 
     long count();
+
+    /**
+     * Multiplica em lote o preco dos livros que atendem ao filtro.
+     *
+     * @param factor     fator aplicado ao preco (0.92 = 8% de desconto)
+     * @param adjustment filtro dos livros afetados
+     * @return quantidade de livros atualizados
+     */
+    int adjustPrices(BigDecimal factor, PriceAdjustment adjustment);
 }

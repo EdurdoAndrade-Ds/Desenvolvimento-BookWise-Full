@@ -3,6 +3,7 @@ package com.bookwise.infrastructure.web;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -80,6 +81,83 @@ class BookControllerTest {
                         .content(bookJson("", "3333333333333")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void updateChangesPriceAndStock() throws Exception {
+        String location = mockMvc.perform(post("/api/v1/books")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookJson("Livro D", "5555555555555")))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getHeader("Location");
+
+        String updated = objectMapper.writeValueAsString(java.util.Map.of(
+                "title", "Livro D editado",
+                "author", "Autor Teste",
+                "isbn", "5555555555555",
+                "format", "PHYSICAL",
+                "price", 59.90,
+                "stock", 12));
+
+        mockMvc.perform(put(location)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updated))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.title").value("Livro D editado"))
+                .andExpect(jsonPath("$.price").value(59.90))
+                .andExpect(jsonPath("$.stock").value(12));
+
+        mockMvc.perform(get(location))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.stock").value(12));
+    }
+
+    @Test
+    void discountAppliesNativeUpdateToSingleBook() throws Exception {
+        String location = mockMvc.perform(post("/api/v1/books")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(bookJson("Livro Desconto", "6666666666666")))
+                .andExpect(status().isCreated())
+                .andReturn()
+                .getResponse()
+                .getHeader("Location");
+        long bookId = Long.parseLong(location.substring(location.lastIndexOf('/') + 1));
+
+        mockMvc.perform(post("/api/v1/books/price-adjustments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of(
+                                "percentage", 8,
+                                "type", "DISCOUNT",
+                                "bookId", bookId))))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.updatedBooks").value(1));
+
+        // 49.90 * 0.92 = 45.908 -> arredondado para 45.91
+        mockMvc.perform(get(location))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.price").value(45.91));
+    }
+
+    @Test
+    void discountWithInvalidPercentageReturns400() throws Exception {
+        mockMvc.perform(post("/api/v1/books/price-adjustments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of("percentage", 0))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void discountForMissingBookReturns404() throws Exception {
+        mockMvc.perform(post("/api/v1/books/price-adjustments")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(java.util.Map.of(
+                                "percentage", 10,
+                                "bookId", 999999))))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404));
     }
 
     @Test

@@ -1,10 +1,12 @@
 package com.bookwise.infrastructure.persistence;
 
 import com.bookwise.domain.model.Reservation;
+import com.bookwise.domain.model.ReservationStatus;
 import com.bookwise.domain.page.PageResult;
 import com.bookwise.domain.port.ReservationRepository;
 import com.bookwise.infrastructure.persistence.entity.ReservationEntity;
 import com.bookwise.infrastructure.persistence.repository.ReservationJpaRepository;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.data.domain.Page;
@@ -66,6 +68,13 @@ public class ReservationRepositoryAdapter implements ReservationRepository {
     @Override
     public List<Reservation> findAll() {
         return jpaRepository.findAll(NEWEST_FIRST).stream()
+                .map(ReservationEntityMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Reservation> findActiveExpired(LocalDate reference) {
+        return jpaRepository.findByStatusAndExpirationDateBefore(ReservationStatus.ACTIVE, reference).stream()
                 .map(ReservationEntityMapper::toDomain)
                 .toList();
     }

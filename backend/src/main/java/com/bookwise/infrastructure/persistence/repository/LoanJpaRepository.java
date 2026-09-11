@@ -1,6 +1,7 @@
 package com.bookwise.infrastructure.persistence.repository;
 
 import com.bookwise.infrastructure.persistence.entity.LoanEntity;
+import java.time.LocalDate;
 import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,4 +29,10 @@ public interface LoanJpaRepository extends JpaRepository<LoanEntity, Long> {
     @EntityGraph(attributePaths = "items")
     @Query("select distinct l from LoanEntity l where l.id in :ids")
     List<LoanEntity> findAllWithItemsByIdIn(@Param("ids") List<Long> ids);
+
+    long countByUserIdAndReturnDateIsNull(Long userId);
+
+    @EntityGraph(attributePaths = "items")
+    @Query("select distinct l from LoanEntity l where l.returnDate is null and l.dueDate < :reference")
+    List<LoanEntity> findOpenOverdue(@Param("reference") LocalDate reference);
 }

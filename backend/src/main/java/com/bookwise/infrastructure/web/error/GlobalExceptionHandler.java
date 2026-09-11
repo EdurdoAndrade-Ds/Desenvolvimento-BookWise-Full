@@ -1,13 +1,7 @@
 package com.bookwise.infrastructure.web.error;
 
-import com.bookwise.domain.exception.BookNotFoundException;
 import com.bookwise.domain.exception.BusinessException;
-import com.bookwise.domain.exception.CategoryNotFoundException;
-import com.bookwise.domain.exception.FineNotFoundException;
-import com.bookwise.domain.exception.LoanNotFoundException;
-import com.bookwise.domain.exception.ReservationNotFoundException;
-import com.bookwise.domain.exception.SaleNotFoundException;
-import com.bookwise.domain.exception.UserNotFoundException;
+import com.bookwise.domain.exception.NotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.stream.Collectors;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -24,16 +18,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler({
-        BookNotFoundException.class,
-        UserNotFoundException.class,
-        LoanNotFoundException.class,
-        SaleNotFoundException.class,
-        CategoryNotFoundException.class,
-        ReservationNotFoundException.class,
-        FineNotFoundException.class
-    })
-    public ResponseEntity<ApiError> handleNotFound(RuntimeException ex, HttpServletRequest request) {
+    @ExceptionHandler(NotFoundException.class)
+    public ResponseEntity<ApiError> handleNotFound(NotFoundException ex, HttpServletRequest request) {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), request);
     }
 

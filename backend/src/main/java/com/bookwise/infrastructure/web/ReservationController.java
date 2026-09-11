@@ -1,5 +1,6 @@
 package com.bookwise.infrastructure.web;
 
+import com.bookwise.application.dto.LoanResponse;
 import com.bookwise.application.dto.PageResponse;
 import com.bookwise.application.dto.ReservationRequest;
 import com.bookwise.application.dto.ReservationResponse;
@@ -55,6 +56,12 @@ public class ReservationController {
         return ResponseEntity
                 .created(URI.create("/api/v1/reservations/" + created.id()))
                 .body(created);
+    }
+
+    @PostMapping("/{id}/convert")
+    @Operation(summary = "Converte uma reserva ativa em emprestimo")
+    public LoanResponse convert(@PathVariable Long id) {
+        return service.convertToLoan(id);
     }
 
     @PostMapping("/{id}/cancel")
