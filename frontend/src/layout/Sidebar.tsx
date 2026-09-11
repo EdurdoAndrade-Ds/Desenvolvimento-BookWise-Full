@@ -9,11 +9,11 @@ interface SidebarProps {
 }
 
 export default function Sidebar({ collapsed, onToggleCollapse, onNavigate }: SidebarProps) {
-  const renderItem = ({ label, to, icon: Icon }: NavItem) => (
+  const renderItem = ({ label, to, icon: Icon, end }: NavItem) => (
     <NavLink
       key={to}
       to={to}
-      end={to === '/'}
+      end={end ?? to === '/'}
       onClick={onNavigate}
       title={collapsed ? label : undefined}
       className={({ isActive }) =>

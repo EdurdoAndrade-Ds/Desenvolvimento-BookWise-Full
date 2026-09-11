@@ -15,10 +15,12 @@ export interface NavItem {
   label: string;
   to: string;
   icon: LucideIcon;
+  /** Marca o item apenas quando a rota casa exatamente (indice de uma secao). */
+  end?: boolean;
 }
 
 export const NAV_ITEMS: NavItem[] = [
-  { label: 'Dashboard', to: '/adm', icon: LayoutDashboard },
+  { label: 'Dashboard', to: '/adm', icon: LayoutDashboard, end: true },
   { label: 'Livros', to: '/adm/books', icon: BookOpen },
   { label: 'Categorias', to: '/adm/categories', icon: FolderTree },
   { label: 'Empréstimos', to: '/adm/loans', icon: ArrowLeftRight },
