@@ -150,11 +150,7 @@ export default function BooksPage() {
               {data?.content.map((book) => (
                 <tr key={book.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
                   <td className="px-6 py-3">
-                    <BookCover
-                      book={book}
-                      className="h-14 w-10 rounded"
-                      iconClassName="h-5 w-5"
-                    />
+                    <BookCover book={book} className="h-14 w-10 rounded" iconClassName="h-5 w-5" />
                   </td>
                   <td className="px-6 py-3 font-medium text-slate-800 dark:text-slate-100">
                     {book.title}
