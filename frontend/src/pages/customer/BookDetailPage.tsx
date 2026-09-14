@@ -139,11 +139,7 @@ export default function BookDetailPage() {
       )}
 
       <div className="grid gap-8 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:grid-cols-[minmax(16rem,24rem)_1fr] md:p-10 dark:border-slate-800 dark:bg-slate-900">
-        <BookCover
-          book={book}
-          className="min-h-72 rounded-2xl"
-          iconClassName="h-32 w-32"
-        />
+        <BookCover book={book} className="min-h-72 rounded-2xl" iconClassName="h-32 w-32" />
 
         <div className="flex flex-col">
           <div>

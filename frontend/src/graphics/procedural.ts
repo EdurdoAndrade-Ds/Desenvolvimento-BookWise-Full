@@ -121,9 +121,9 @@ export function colorFromString(value: string): HslColor {
   };
 }
 
-/** Formata uma cor HSL como uma string CSS hsl(). */
+/** Formata uma cor HSL como uma string CSS hsl() (sintaxe com virgulas, aceita pelo Three.js). */
 export function hslToCss(color: HslColor): string {
-  return `hsl(${color.h} ${color.s}% ${color.l}%)`;
+  return `hsl(${color.h}, ${color.s}%, ${color.l}%)`;
 }
 
 /** Calcula value noise 2D com valores de grade e interpolacao smoothstep. */
