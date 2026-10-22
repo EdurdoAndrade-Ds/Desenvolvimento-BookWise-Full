@@ -65,6 +65,38 @@ No console H2, use a URL JDBC
 `jdbc:h2:mem:bookwise;DB_CLOSE_DELAY=-1;MODE=PostgreSQL`, usuario `sa` e senha
 vazia.
 
+## 2.1 Desenvolvimento usando os ambientes ja publicados
+
+Quando so o frontend esta sendo alterado, nao e preciso subir o backend: o proxy
+do Vite passa a apontar para a API publicada.
+
+```bash
+cd frontend
+npm run dev:online
+```
+
+O alvo do proxy vem de `API_PROXY_TARGET` (`frontend/.env.development` para o
+backend local e `frontend/.env.online` para o publicado; copie
+`frontend/.env.example` para `frontend/.env.local` para sobrescrever sem
+versionar). Como o proxy roda no servidor do Vite, o navegador continua em
+`http://localhost:5173` e o CORS do backend nao precisa liberar a origem local.
+
+O caminho inverso — API local contra o PostgreSQL publicado, sem Docker — usa o
+perfil `remote`, que le as credenciais do ambiente e mantem Flyway e as rotinas
+periodicas desligados por padrao para nao alterar o banco compartilhado:
+
+```bash
+cd backend
+SPRING_PROFILES_ACTIVE=remote \
+  DB_URL=jdbc:postgresql://<host>:5432/bookwise \
+  DB_USERNAME=<usuario> DB_PASSWORD=<senha> \
+  mvn spring-boot:run
+```
+
+URLs publicadas: API `https://desenvolvimento-bookwise-full.onrender.com` e
+portal `https://desenvolvimento-bookwise-full-1.onrender.com` (ver
+`render.yaml`).
+
 ## 3. Execucao local — modo B: Docker Compose
 
 Este modo executa PostgreSQL 16 e a API com o perfil `docker`. O PostgreSQL e

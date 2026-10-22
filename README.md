@@ -118,6 +118,16 @@ Modulos puros (sem React) usados por elas: `src/graphics/imageFilters.ts`,
 | Contrato JSON  | http://localhost:8080/v3/api-docs           |
 | Health         | http://localhost:8080/actuator/health       |
 
+## 🔗 Links
+
+| | |
+|---|---|
+| 🌐 Aplicação (front) | https://desenvolvimento-bookwise-full-1.onrender.com/ |
+| 📖 API (Swagger) | https://desenvolvimento-bookwise-full.onrender.com/swagger-ui/index.html |
+| 📋 Backlog (Notion) | https://app.notion.com/p/BOOK-WISE-PROJECT-4014745f0aec8070ab4cf34644422164 |
+
+> O backend roda no plano gratuito do Render e "dorme" após inatividade. O primeiro acesso pode levar cerca de 1 minuto.
+
 ## Relatorios (SQL nativo)
 
 As agregacoes do dashboard sao feitas no banco, com `@Query(nativeQuery = true)` em

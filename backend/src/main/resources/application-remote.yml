@@ -1,0 +1,33 @@
+# Perfil REMOTE: API rodando na maquina do desenvolvedor contra o PostgreSQL ja
+# publicado, sem subir Docker/Postgres local. As credenciais vem do ambiente
+# (nunca versione DB_URL/DB_USERNAME/DB_PASSWORD).
+#
+#   cd backend
+#   SPRING_PROFILES_ACTIVE=remote DB_URL=... DB_USERNAME=... DB_PASSWORD=... mvn spring-boot:run
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    # Desligado por padrao para nao aplicar migrations em um banco compartilhado.
+    enabled: ${FLYWAY_ENABLED:false}
+    baseline-on-migrate: true
+
+bookwise:
+  cors:
+    # Libera o frontend local apontado para esta API.
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173}
+  jobs:
+    # Evita que a rotina local concorra com a instancia publicada.
+    enabled: ${JOBS_ENABLED:false}
+
+logging:
+  level:
+    com.bookwise: INFO
