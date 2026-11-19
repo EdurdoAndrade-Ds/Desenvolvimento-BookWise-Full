@@ -1,0 +1,30 @@
+# Perfil LOCAL: roda standalone com H2 em memoria (sem necessidade de Docker/Postgres).
+# Ideal para desenvolvimento e demonstracao. O schema e criado pelo Hibernate e os
+# dados de exemplo sao inseridos pelo DataSeeder (@Profile("local")).
+spring:
+  datasource:
+    url: jdbc:h2:mem:bookwise;DB_CLOSE_DELAY=-1;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        # Espelha as FKs das migrations PostgreSQL no banco local de demonstracao.
+        hbm2ddl:
+          import_files: db/local-schema-alignment.sql
+    show-sql: true
+  flyway:
+    enabled: false
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+logging:
+  level:
+    com.bookwise: DEBUG
+    org.hibernate.SQL: DEBUG

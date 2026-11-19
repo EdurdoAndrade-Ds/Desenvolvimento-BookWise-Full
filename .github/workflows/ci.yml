@@ -1,0 +1,55 @@
+name: CI
+
+# Porteiro do projeto: em todo Pull Request para a main, garante que o backend
+# passa nos testes e que o frontend compila. Assim ninguem consegue mesclar uma
+# mudanca que quebra o build sem que o PR fique vermelho.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (testes)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+      - name: mvn verify
+        working-directory: backend
+        run: mvn -B --no-transfer-progress verify
+
+  frontend:
+    name: Frontend (lint, testes e build)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Instalar dependencias
+        working-directory: frontend
+        run: npm ci
+      - name: Lint
+        working-directory: frontend
+        run: npm run lint
+      - name: Formatacao (Prettier)
+        working-directory: frontend
+        run: npm run format
+      - name: Typecheck
+        working-directory: frontend
+        run: npm run typecheck
+      - name: Testes
+        working-directory: frontend
+        run: npm test
+      - name: Build
+        working-directory: frontend
+        run: npm run build

@@ -1,0 +1,56 @@
+spring:
+  application:
+    name: bookwise-api
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:local}
+  jpa:
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: ${PORT:${SERVER_PORT:8080}}
+
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+      cors:
+        allowed-origins: ${bookwise.cors.allowed-origins:}
+        allowed-methods: GET,OPTIONS
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
+
+# Parametros de negocio configuraveis (ver com.bookwise.config.BusinessProperties).
+# Valores abaixo sao os padroes; ajuste conforme a politica da biblioteca.
+bookwise:
+  cors:
+    # Origens liberadas quando o frontend roda separado da API (vazio = mesma origem).
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+  loan:
+    default-days: 14            # prazo padrao do emprestimo quando nao informado
+    max-active-per-user: 5      # emprestimos em aberto por usuario (0 = sem limite)
+    max-items-per-loan: 5       # itens por emprestimo (0 = sem limite)
+    block-when-fine-pending: true  # bloqueia emprestimo/renovacao com multa pendente
+    block-on-pending-charges: true
+    max-renewals: 2             # renovacoes por emprestimo (0 = desabilitado)
+    renewal-days: 7             # dias acrescentados por renovacao
+  fine:
+    per-day: 2.00               # multa por dia de atraso (R$)
+  reservation:
+    default-expiration-days: 7  # validade padrao da reserva quando nao informada
+    hold-stock: true            # reserva bloqueia uma unidade do estoque fisico
+  jobs:
+    enabled: true               # rotinas periodicas de manutencao
+    reservation-expiration-cron: "0 5 0 * * *"
+    overdue-fine-cron: "0 10 0 * * *"
