@@ -1,8 +1,7 @@
 import { Link, Outlet } from 'react-router-dom';
 import CustomerHeader from './CustomerHeader';
 import CustomerSidebar from './CustomerSidebar';
-import { CurrentCustomerProvider } from '../context/CurrentCustomerContext';
-
+import { CurrentCustomerProvider } from '../context/CurrentCustomerProvider';
 export default function CustomerLayout() {
   return (
     <CurrentCustomerProvider>

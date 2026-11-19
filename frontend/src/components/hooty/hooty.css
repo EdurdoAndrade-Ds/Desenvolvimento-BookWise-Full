@@ -1,0 +1,359 @@
+/* =========================================================================
+   HOOTY — mascote da BookWise
+   Tudo está dentro de .hooty para não conflitar com o CSS do projeto.
+
+   TEMAS
+   - Tema claro  = valores padrão de `.hooty`
+   - Tema escuro = bloco `:is(.dark, [data-theme="dark"]) .hooty` mais abaixo.
+     Se o seu botão de tema usa outro jeito (ver GUIA, passo 5), troque
+     só o seletor desse bloco.
+   ========================================================================= */
+
+.hooty {
+  /* tamanho: --owl é o tamanho da coruja; o círculo mede --owl × 2,1 */
+  --owl: 30px;
+
+  /* ---------- TEMA CLARO ---------- */
+  /* círculo de fundo */
+  --h-disc-1: #fbf3e6;
+  --h-disc-2: #f1dfc4;
+  --h-disc-3: #e2c79e;
+  --h-ring: #a1864d;
+  --h-shadow: rgba(65, 43, 17, 0.18);
+  /* livros */
+  --h-line: #412b11;
+  --h-b1: #a1864d;
+  --h-b2: #a78f76;
+  --h-b3: #412b11;
+  --h-b4: #d09a4d;
+  --h-b5: #434613;
+  --h-spine: #dfb67e;
+  --h-page: #f4e8d6;
+  /* coruja */
+  --h-body-top: #d09a4d;
+  --h-body-bot: #a1864d;
+  --h-body-l: #a78f76;
+  --h-body-r: #dfb67e;
+  --h-wing-top: #434613;
+  --h-wing-bot: #2e300c;
+  --h-feather: #6b6f22;
+  --h-belly: #e5ccb2;
+  --h-belly-line: #a1864d;
+  --h-feet: #a1864d;
+  --h-eye: #e5ccb2;
+  --h-ink: #412b11; /* pupila, bico e sobrancelhas */
+  --h-z: #a1864d;
+  /* balão de fala */
+  --h-bubble-bg: #ffffff;
+  --h-bubble-fg: #1f2a44;
+  --h-bubble-line: rgba(31, 42, 68, 0.14);
+
+  position: relative;
+  flex: none;
+  width: calc(var(--owl) * 2.1);
+  height: calc(var(--owl) * 2.1);
+  margin: 0 auto;
+}
+
+/* tamanho grande (versão do HTML original) */
+.hooty--full {
+  --owl: 114px;
+}
+
+/* ---------- TEMA ESCURO ---------- */
+:is(.dark, [data-theme="dark"]) .hooty {
+  --h-disc-1: #22325c;
+  --h-disc-2: #172445;
+  --h-disc-3: #0f172e;
+  --h-ring: #4b6fd6;
+  --h-shadow: rgba(0, 0, 0, 0.55);
+
+  --h-line: #000000;
+  --h-b1: #8a6d3b;
+  --h-b2: #a78f76;
+  --h-b3: #4f74d8;
+  --h-b4: #d09a4d;
+  --h-b5: #6f7a2b;
+  --h-spine: #e9c998;
+  --h-page: #efe4d0;
+
+  --h-body-top: #d9a24f;
+  --h-body-bot: #b08e52;
+  --h-body-l: #b39a7e;
+  --h-body-r: #e6c08a;
+  --h-wing-top: #5d6521;
+  --h-wing-bot: #3f4515;
+  --h-feather: #8f9533;
+  --h-belly: #f1e6d3;
+  --h-belly-line: #b08e52;
+  --h-feet: #b08e52;
+  --h-eye: #f3e9d8;
+  --h-ink: #2a1b0a;
+  --h-z: #8fa8f0;
+
+  --h-bubble-bg: #1a2540;
+  --h-bubble-fg: #e8eeff;
+  --h-bubble-line: rgba(143, 168, 240, 0.25);
+}
+
+/* ---------- cores aplicadas nos elementos do SVG ---------- */
+.hooty .hb1 { fill: var(--h-b1); }
+.hooty .hb2 { fill: var(--h-b2); }
+.hooty .hb3 { fill: var(--h-b3); }
+.hooty .hb4 { fill: var(--h-b4); }
+.hooty .hb5 { fill: var(--h-b5); }
+.hooty .hpage { fill: var(--h-page); }
+.hooty .hooty-line { stroke: var(--h-line); }
+.hooty .hs-b3 { stroke: var(--h-b3); }
+.hooty .hs-b4 { stroke: var(--h-b4); }
+.hooty .hs-sp { stroke: var(--h-spine); }
+
+.hooty .hg-top { stop-color: var(--h-body-top); }
+.hooty .hg-bot { stop-color: var(--h-body-bot); }
+.hooty .hg-l { stop-color: var(--h-body-l); }
+.hooty .hg-r { stop-color: var(--h-body-r); }
+.hooty .hg-wing-top { stop-color: var(--h-wing-top); }
+.hooty .hg-wing-bot { stop-color: var(--h-wing-bot); }
+.hooty .h-feet { fill: var(--h-feet); }
+.hooty .h-belly { fill: var(--h-belly); }
+.hooty .h-belly-line { stroke: var(--h-belly-line); }
+.hooty .h-feather { stroke: var(--h-feather); }
+.hooty .h-eye { fill: var(--h-eye); }
+.hooty .h-ink { fill: var(--h-ink); }
+.hooty .h-ink-stroke { stroke: var(--h-ink); }
+.hooty .h-ink-both { fill: var(--h-ink); stroke: var(--h-ink); }
+
+/* ---------- círculo de fundo ---------- */
+.hooty .hooty__disc {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background: radial-gradient(circle at 50% 32%, var(--h-disc-1) 0%, var(--h-disc-2) 58%, var(--h-disc-3) 100%);
+  box-shadow: 0 3px 8px var(--h-shadow);
+  transition: background 0.25s;
+}
+.hooty .hooty__disc svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.hooty .hooty__disc::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 max(1.5px, calc(var(--owl) * 0.035)) var(--h-ring);
+  pointer-events: none;
+}
+
+/* ---------- coruja ---------- */
+.hooty .owl {
+  position: absolute;
+  left: calc(var(--owl) * 0.55);
+  top: calc(var(--owl) * 0.41);
+  width: var(--owl);
+  aspect-ratio: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.hooty .owl__rig {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hooty .owl[data-mood="angry"] .owl__rig { transform: scale(1.04); }
+.hooty .owl__svg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: block;
+  overflow: visible;
+}
+
+/* inclinação da cabeça (controlada pelo JS; a placa acompanha) */
+.hooty .owl__tilt { transform-origin: 100px 130px; transition: transform 0.12s linear; }
+.hooty .sign__tilt {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  transform-origin: 50% 65%;
+  transition: transform 0.12s linear;
+}
+
+/* respiração enquanto dorme */
+.hooty .owl__torso { transform-box: fill-box; transform-origin: 50% 100%; }
+.hooty .owl[data-mood="sleeping"] .owl__torso { animation: hooty-breathe 3.4s ease-in-out infinite; }
+@keyframes hooty-breathe { 50% { transform: scale(1.018, 1.03); } }
+
+/* olhos */
+.hooty .eye { transform-box: fill-box; transform-origin: center; transition: transform 0.12s ease-out; }
+.hooty .pupil { transition: opacity 0.2s; }
+.hooty .owl.is-blinking .eye { transform: scaleY(0.08); }
+.hooty .owl[data-mood="angry"] .eye { transform: scaleY(0.8); }
+.hooty .owl[data-mood="sleeping"] .eye { transform: scale(0.55, 0.07); transition: transform 0.55s ease; }
+.hooty .owl[data-mood="sleeping"] .pupil { opacity: 0; }
+
+/* sobrancelhas de bravo */
+.hooty .brows { opacity: 0; transform: translateY(-5px); transition: opacity 0.18s, transform 0.18s; }
+.hooty .owl[data-mood="angry"] .brows { opacity: 1; transform: none; }
+
+/* asa esquerda (a direita segura a placa e fica parada) */
+.hooty .wing--l { transform-origin: 50px 108px; transition: transform 0.3s ease; }
+.hooty .owl[data-mood="angry"] .wing--l { transform: rotate(10deg); }
+
+/* clique: pulinho + bater a asa livre */
+.hooty .owl.is-hopping { animation: hooty-hop 0.5s cubic-bezier(0.3, 0.7, 0.4, 1); }
+.hooty .owl.is-hopping .wing--l { animation: hooty-flap 0.5s ease; }
+@keyframes hooty-hop { 35% { transform: translateY(calc(var(--owl) * -0.1)); } }
+@keyframes hooty-flap { 40% { transform: rotate(32deg); } }
+
+/* ---------- placa (duas faces, gira 360° sem texto espelhado) ---------- */
+.hooty .sign__lean {
+  position: absolute;
+  left: 65.2%;
+  top: 28%;
+  width: 64%;
+  aspect-ratio: 720 / 719;
+  transform: rotate(30deg);
+  transform-origin: 48.1% 72%;
+}
+.hooty .sign { position: absolute; inset: 0; perspective: calc(var(--owl) * 4); transform-origin: 48.1% 72%; }
+.hooty .sign__spin { position: absolute; inset: 0; transform-style: preserve-3d; transform-origin: 48.1% 50%; }
+.hooty .sign__face {
+  position: absolute;
+  inset: 0;
+  transform-origin: 48.1% 50%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: url("./hooty-sign.png") center / 100% 100% no-repeat;
+}
+.hooty .sign__face--back { transform: rotateY(180deg); }
+.hooty .sign__label {
+  position: absolute;
+  left: 4.2%;
+  top: 7.2%;
+  width: 90%;
+  height: 27.4%;
+  display: flex;
+  opacity: 0; /* no tamanho compacto o texto não cabe: ele aparece quando o Hooty cresce */
+  transition: opacity 0.2s;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: var(--hooty-font, "Playfair Display", Georgia, serif);
+  font-weight: 600;
+  font-size: calc(var(--owl) * 0.08);
+  line-height: 1.05;
+  color: #412b11; /* a placa é clara nos dois temas */
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+.hooty--full .sign__label { opacity: 1; font-size: max(8px, calc(var(--owl) * 0.08)); }
+
+/* ---------- ZOOM: o Hooty cresce ao passar o mouse e a placa fica legível ---------- */
+.hooty--zoom {
+  transform-origin: 0 100%; /* cresce para cima e para a direita, saindo da sidebar */
+  transition: transform 0.28s cubic-bezier(0.34, 1.3, 0.64, 1);
+}
+@media (hover: hover) and (min-width: 1024px) {
+  .hooty--zoom:hover {
+    transform: scale(var(--hooty-zoom, 3.5));
+    z-index: 60;
+  }
+  .hooty--zoom:hover .sign__label { opacity: 1; transition-delay: 0.12s; }
+  .hooty--zoom:hover .hooty__bubble { display: none; }
+}
+
+/* a placa reage a tudo que o Hooty faz */
+.hooty .owl[data-mood="angry"] .sign { animation: hooty-signShake 0.45s ease; }
+.hooty .owl[data-mood="sleeping"] .sign { animation: hooty-signBreathe 3.4s ease-in-out infinite; }
+.hooty .owl.is-hopping .sign { animation: hooty-signHop 0.5s ease; }
+@keyframes hooty-signShake { 20% { transform: rotate(-7deg); } 45% { transform: rotate(6deg); } 70% { transform: rotate(-3deg); } }
+@keyframes hooty-signBreathe { 50% { transform: translateY(1.5%) rotate(1.5deg); } }
+@keyframes hooty-signHop { 35% { transform: rotate(-9deg); } 70% { transform: rotate(4deg); } }
+
+/* ---------- zzz ---------- */
+.hooty .owl__zs {
+  position: absolute;
+  top: calc(var(--owl) * -0.3);
+  left: 46%;
+  width: calc(var(--owl) * 0.4);
+  height: calc(var(--owl) * 0.4);
+  pointer-events: none;
+  display: none;
+}
+.hooty .owl[data-mood="sleeping"] .owl__zs { display: block; }
+.hooty .owl__zs span {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  font-family: system-ui, sans-serif;
+  font-weight: 700;
+  color: var(--h-z);
+  opacity: 0;
+  animation: hooty-zfloat 3.2s ease-in-out infinite;
+}
+.hooty .owl__zs span:nth-child(1) { font-size: max(6px, calc(var(--owl) * 0.14)); animation-delay: 0s; }
+.hooty .owl__zs span:nth-child(2) { font-size: max(7px, calc(var(--owl) * 0.18)); animation-delay: 1.05s; }
+.hooty .owl__zs span:nth-child(3) { font-size: max(8px, calc(var(--owl) * 0.22)); animation-delay: 2.1s; }
+@keyframes hooty-zfloat {
+  0% { opacity: 0; transform: translate(0, calc(var(--owl) * 0.07)) scale(0.6); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: translate(calc(var(--owl) * 0.14), calc(var(--owl) * -0.33)) scale(1.1); }
+}
+
+/* ---------- balão de fala (aparece ao passar o mouse) ---------- */
+.hooty .hooty__bubble {
+  position: absolute;
+  left: calc(100% + 10px);
+  bottom: 22%;
+  z-index: 60;
+  width: max-content;
+  max-width: 220px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: var(--h-bubble-bg);
+  color: var(--h-bubble-fg);
+  border: 1px solid var(--h-bubble-line);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.18);
+  font: 500 12px/1.35 var(--hooty-ui-font, system-ui, -apple-system, "Segoe UI", sans-serif);
+  opacity: 0;
+  transform: translateX(-4px);
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.hooty .hooty__bubble::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  bottom: 14px;
+  width: 9px;
+  height: 9px;
+  background: var(--h-bubble-bg);
+  border-left: 1px solid var(--h-bubble-line);
+  border-bottom: 1px solid var(--h-bubble-line);
+  transform: rotate(45deg);
+}
+.hooty:hover .hooty__bubble { opacity: 1; transform: none; }
+.hooty .hooty__bubble small { display: block; margin-top: 2px; font-weight: 400; opacity: 0.7; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hooty--zoom { transition: none; }
+  .hooty .owl__rig, .hooty .owl__tilt, .hooty .sign__tilt, .hooty .eye, .hooty .wing, .hooty .brows { transition: none; }
+  .hooty .owl__torso, .hooty .owl__zs span, .hooty .owl.is-hopping,
+  .hooty .owl.is-hopping .wing--l, .hooty .owl[data-mood] .sign, .hooty .owl.is-hopping .sign { animation: none; }
+  .hooty .owl[data-mood="sleeping"] .owl__zs span { opacity: 1; }
+}
+
+/* no celular (barra no topo) não há espaço para o balão */
+@media (max-width: 1023px) {
+  .hooty .hooty__bubble { display: none; }
+}
