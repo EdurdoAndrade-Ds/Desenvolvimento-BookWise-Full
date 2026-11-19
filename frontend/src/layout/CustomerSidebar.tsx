@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useLocation } from 'react-router-dom';
 import {
   Boxes,
   Heart,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCurrentCustomer } from '../context/useCurrentCustomer';
+import { Hooty } from '../components/hooty';
 
 const NAV_ITEMS: { to: string; label: string; icon: LucideIcon; end?: boolean }[] = [
   { to: '/', label: 'Catálogo', icon: LayoutGrid, end: true },
@@ -36,15 +37,16 @@ export default function CustomerSidebar() {
   const { customer } = useCurrentCustomer();
   const avatar = initials(customer?.name);
 
+  // nome da página atual, que o Hooty mostra na placa
+  const { pathname } = useLocation();
+  const current = NAV_ITEMS.find((item) =>
+    item.end ? pathname === item.to : pathname.startsWith(item.to),
+  );
+  const pageName = current?.label ?? (pathname.startsWith('/my-account') ? 'Minha conta' : 'BookWise');
+
   return (
     <aside className="sticky top-0 z-10 flex w-full shrink-0 items-center gap-3 border-b border-cream-200 bg-cream-100 px-4 py-3 lg:h-screen lg:w-24 lg:flex-col lg:justify-between lg:border-b-0 lg:border-r lg:py-6 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex min-w-0 flex-1 items-center gap-3 lg:flex-none lg:flex-col lg:gap-6">
-        <Link
-          to="/"
-          className="shrink-0 text-sm font-bold tracking-tight text-slate-800 lg:text-base dark:text-slate-100"
-        >
-          Bookstore
-        </Link>
         <Link
           to="/my-account"
           title="Minha conta"
@@ -74,12 +76,11 @@ export default function CustomerSidebar() {
           ))}
         </nav>
       </div>
-      <Link
-        to="/my-account"
-        className="shrink-0 rounded-2xl bg-emerald-500 px-3 py-2 text-xs font-semibold tracking-wide text-white shadow-sm transition hover:bg-emerald-600 lg:[writing-mode:vertical-rl] lg:px-2 lg:py-6"
-      >
-        Subscribe
-      </Link>
+
+      {/* Hooty no lugar do botão Subscribe */}
+      <div className="shrink-0">
+        <Hooty page={pageName} className="![--owl:22px] lg:![--owl:30px]" />
+      </div>
     </aside>
   );
 }
