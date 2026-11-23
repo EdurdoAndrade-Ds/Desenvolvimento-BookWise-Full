@@ -1,0 +1,19 @@
+# Perfil DOCKER: PostgreSQL com migrations gerenciadas pelo Flyway.
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://db:5432/bookwise}
+    username: ${DB_USERNAME:bookwise}
+    password: ${DB_PASSWORD:bookwise}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+
+logging:
+  level:
+    com.bookwise: INFO
