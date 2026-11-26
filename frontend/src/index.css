@@ -2,6 +2,101 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Vitrine: tons de papel, tinta e dourado. Triplas RGB para aceitar opacidade no Tailwind. */
+:root {
+  --paper: 246 241 232;
+  --paper-deep: 236 227 209;
+  --paper-card: 252 249 243;
+  --ink: 31 26 20;
+  --ink-soft: 107 95 79;
+  --rule: 217 204 180;
+  --gold: 176 138 62;
+  --gold-deep: 138 107 79;
+  --wine: 140 59 42;
+}
+
+.dark {
+  --paper: 20 17 14;
+  --paper-deep: 29 24 19;
+  --paper-card: 36 30 24;
+  --ink: 241 233 218;
+  --ink-soft: 176 164 146;
+  --rule: 58 48 40;
+  --gold: 212 176 106;
+  --gold-deep: 190 160 110;
+  --wine: 214 120 98;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes clipIn {
+  from {
+    opacity: 0;
+    transform: translateY(-12px) scale(0.85);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Indicador "vire a pagina": duas piscadas suaves e some. */
+@keyframes pageTurnHint {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translateX(0);
+  }
+  18%,
+  62% {
+    opacity: 0.95;
+    transform: translateX(3px);
+  }
+  40%,
+  84% {
+    opacity: 0.12;
+    transform: translateX(0);
+  }
+}
+
+.page-turn-hint {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: rgb(42 33 27 / 0.72);
+  color: #f6efe1;
+  box-shadow: 0 0 0 6px rgb(176 138 62 / 0.18), 0 4px 14px rgb(0 0 0 / 0.25);
+  opacity: 0;
+  animation: pageTurnHint 2.4s ease-in-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-turn-hint {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
 html,
 body,
 #root {
