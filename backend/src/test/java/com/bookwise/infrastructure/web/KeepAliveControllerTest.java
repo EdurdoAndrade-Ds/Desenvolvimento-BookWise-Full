@@ -16,6 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(properties = {
         "spring.config.import=file:src/main/resources/application.yml",
+        "bookwise.jobs.enabled=false",
         "spring.profiles.active=test",
         "bookwise.cors.allowed-origins=http://localhost:5173"
 })
