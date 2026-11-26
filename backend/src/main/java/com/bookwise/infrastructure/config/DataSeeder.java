@@ -251,12 +251,13 @@ public class DataSeeder implements CommandLineRunner {
             return 0;
         }
         loanRepository.save(new Loan(
-                null, borrower.id(), borrower.name(), List.of(items), loanDate, dueDate, returnDate, 0, null));
+                null, borrower.id(), borrower.name(), List.of(items), loanDate, dueDate, returnDate, 0,
+                BigDecimal.ZERO, null, null, null));
         return 1;
     }
 
     private LoanItem item(Book book, int quantity) {
-        return new LoanItem(book.id(), book.title(), quantity);
+        return new LoanItem(book.id(), book.title(), quantity, BigDecimal.ZERO);
     }
 
     private void seedSales() {
@@ -327,7 +328,7 @@ public class DataSeeder implements CommandLineRunner {
             int stock,
             String coverUrl) {
         return new Book(
-                null, title, author, isbn, genre, publishedYear, format, new BigDecimal(price), stock,
+                null, title, author, isbn, genre, publishedYear, format, new BigDecimal(price), new BigDecimal("7.90"), stock,
                 coverUrl, List.of(), null);
     }
 

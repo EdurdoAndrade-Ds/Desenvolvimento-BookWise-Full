@@ -1,5 +1,9 @@
 package com.bookwise.infrastructure.persistence.entity;
 
+import com.bookwise.domain.model.LoanChargeStatus;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import java.math.BigDecimal;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,6 +52,16 @@ public class LoanEntity {
 
     @Column(name = "renewal_count", nullable = false)
     private int renewalCount;
+
+    @Column(name = "charge_amount", precision = 12, scale = 2, nullable = false)
+    private BigDecimal chargeAmount = BigDecimal.ZERO;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "charge_status", length = 20)
+    private LoanChargeStatus chargeStatus;
+
+    @Column(name = "charge_payment_date")
+    private LocalDate chargePaymentDate;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private OffsetDateTime createdAt;

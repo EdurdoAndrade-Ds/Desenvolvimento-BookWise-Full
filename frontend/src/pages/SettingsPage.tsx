@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { Sun, Moon, Monitor, type LucideIcon } from 'lucide-react';
 import DatabaseSchemaTab from '../components/DatabaseSchemaTab';
+import KeepAliveSettings from '../components/KeepAliveSettings';
 import { useTheme, type Theme } from '../theme/ThemeProvider';
 
 const themeOptions: {
@@ -20,7 +21,7 @@ const themeOptions: {
 ];
 
 export default function SettingsPage() {
-  const [tab, setTab] = useState<'appearance' | 'database'>('appearance');
+  const [tab, setTab] = useState<'appearance' | 'database' | 'server'>('appearance');
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -31,9 +32,18 @@ export default function SettingsPage() {
         <TabButton active={tab === 'database'} onClick={() => setTab('database')}>
           Banco de dados
         </TabButton>
+        <TabButton active={tab === 'server'} onClick={() => setTab('server')}>
+          Servidor
+        </TabButton>
       </div>
 
-      {tab === 'appearance' ? <AppearanceSettings /> : <DatabaseSchemaTab />}
+      {tab === 'appearance' ? (
+        <AppearanceSettings />
+      ) : tab === 'server' ? (
+        <KeepAliveSettings />
+      ) : (
+        <DatabaseSchemaTab />
+      )}
     </div>
   );
 }

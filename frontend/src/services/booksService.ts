@@ -9,6 +9,7 @@ export interface BookInput {
   publishedYear?: number;
   format: Book['format'];
   price?: number;
+  loanPrice?: number | null;
   stock?: number;
   coverUrl?: string;
   categoryIds?: number[];

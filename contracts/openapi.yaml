@@ -41,6 +41,54 @@ tags:
     description: Relatorios analiticos agregados no banco (SQL nativo)
 
 paths:
+  /actuator/health:
+    get:
+      summary: Public health (no component details)
+      responses:
+        '200':
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: UP
+        '503':
+          description: Unhealthy
+  /api/v1/admin/keep-alive:
+    description: >-
+      Administrative configuration. Like existing admin operations this application
+      currently has no authentication layer; deployment must restrict admin access.
+    get:
+      summary: Read keep-alive configuration and last backend ping
+      responses:
+        '200':
+          description: Configuration and target availability (URL is not disclosed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeepAlive'
+    put:
+      summary: Configure backend keep-alive
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeepAliveInput'
+      responses:
+        '200':
+          description: Saved configuration
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeepAlive'
+        '400':
+          description: Invalid or missing fields / deadline not in the future
+        '409':
+          description: Unsupported interval or deadline not in the future
   # ==================================================================
   # REPORTS
   # ==================================================================
@@ -384,6 +432,25 @@ paths:
                 $ref: '#/components/schemas/Fine'
         '404':
           $ref: '#/components/responses/NotFound'
+
+  /api/v1/loans/{id}/pay:
+    parameters:
+      - $ref: '#/components/parameters/IdParam'
+    post:
+      tags: [Loans]
+      summary: Registra o pagamento da cobranca de um emprestimo
+      operationId: payLoanCharge
+      responses:
+        '200':
+          description: Cobranca paga
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Loan'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Emprestimo sem cobranca pendente
 
   /api/v1/fines/{id}/pay:
     parameters:
@@ -836,6 +903,46 @@ components:
             $ref: '#/components/schemas/ErrorResponse'
 
   schemas:
+    KeepAliveInput:
+      type: object
+      required: [enabled, intervalMinutes]
+      properties:
+        enabled:
+          type: boolean
+        intervalMinutes:
+          type: integer
+          enum: [5, 10, 14]
+        activeUntil:
+          type: string
+          format: date-time
+          nullable: true
+          description: Future instant, or null until manually disabled
+    KeepAlive:
+      allOf:
+        - $ref: '#/components/schemas/KeepAliveInput'
+        - type: object
+          properties:
+            lastPingAt:
+              type: string
+              format: date-time
+              nullable: true
+            lastStatus:
+              type: string
+              nullable: true
+              description: HTTP status code or sanitized error category
+            lastLatencyMs:
+              type: integer
+              format: int64
+              minimum: 0
+              nullable: true
+            failureCount:
+              type: integer
+              minimum: 0
+            targetConfigured:
+              type: boolean
+            warning:
+              type: string
+              nullable: true
     SchemaResponse:
       type: object
       required: [database, tables]
@@ -991,6 +1098,13 @@ components:
           type: number
           format: double
           example: 89.90
+        loanPrice:
+          type: number
+          format: double
+          minimum: 0
+          nullable: true
+          description: Valor do emprestimo por exemplar; nulo significa gratis
+          example: 7.90
         stock:
           type: integer
           format: int32
@@ -1111,6 +1225,11 @@ components:
     LoanItem:
       type: object
       properties:
+        unitLoanPrice:
+          type: number
+          format: double
+          minimum: 0
+          description: Valor por exemplar registrado na criacao do emprestimo
         bookId:
           type: integer
           format: int64
@@ -1124,6 +1243,19 @@ components:
     Loan:
       type: object
       properties:
+        chargeAmount:
+          type: number
+          format: double
+          minimum: 0
+        chargeStatus:
+          type: string
+          enum: [PENDING, PAID]
+          nullable: true
+          description: Nulo quando o emprestimo e gratis
+        chargePaymentDate:
+          type: string
+          format: date
+          nullable: true
         id:
           type: integer
           format: int64

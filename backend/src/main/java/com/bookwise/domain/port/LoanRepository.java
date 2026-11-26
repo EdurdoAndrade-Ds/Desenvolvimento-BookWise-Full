@@ -26,6 +26,8 @@ public interface LoanRepository {
     /** Quantidade de emprestimos em aberto (sem devolucao) do usuario. */
     long countOpenByUserId(Long userId);
 
+    boolean existsPendingChargeByUserId(Long userId);
+
     /** Emprestimos em aberto cuja data prevista de devolucao ja passou. */
     List<Loan> findOpenOverdue(LocalDate reference);
 

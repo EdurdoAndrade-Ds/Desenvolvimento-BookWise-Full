@@ -20,7 +20,7 @@ public final class LoanMapper {
 
     public static LoanResponse toResponse(Loan loan, LocalDate reference) {
         List<LoanItemResponse> items = loan.items().stream()
-                .map(i -> new LoanItemResponse(i.bookId(), i.bookTitle(), i.quantity()))
+                .map(i -> new LoanItemResponse(i.bookId(), i.bookTitle(), i.quantity(), i.unitLoanPrice()))
                 .toList();
         return new LoanResponse(
                 loan.id(),
@@ -31,6 +31,9 @@ public final class LoanMapper {
                 loan.dueDate(),
                 loan.returnDate(),
                 loan.renewalCount(),
+                loan.chargeAmount(),
+                loan.chargeStatus(),
+                loan.chargePaymentDate(),
                 loan.statusAt(reference));
     }
 

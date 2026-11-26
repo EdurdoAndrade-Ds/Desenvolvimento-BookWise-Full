@@ -32,6 +32,9 @@ public record BookRequest(
         @PositiveOrZero(message = "O preco nao pode ser negativo")
         BigDecimal price,
 
+        @PositiveOrZero(message = "O valor do emprestimo nao pode ser negativo")
+        BigDecimal loanPrice,
+
         @PositiveOrZero(message = "O estoque nao pode ser negativo")
         Integer stock,
 

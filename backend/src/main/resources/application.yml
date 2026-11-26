@@ -22,7 +22,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health
+      cors:
+        allowed-origins: ${bookwise.cors.allowed-origins:}
+        allowed-methods: GET,OPTIONS
+  endpoint:
+    health:
+      show-details: never
+      show-components: never
 
 # Parametros de negocio configuraveis (ver com.bookwise.config.BusinessProperties).
 # Valores abaixo sao os padroes; ajuste conforme a politica da biblioteca.
@@ -35,6 +42,7 @@ bookwise:
     max-active-per-user: 5      # emprestimos em aberto por usuario (0 = sem limite)
     max-items-per-loan: 5       # itens por emprestimo (0 = sem limite)
     block-when-fine-pending: true  # bloqueia emprestimo/renovacao com multa pendente
+    block-on-pending-charges: true
     max-renewals: 2             # renovacoes por emprestimo (0 = desabilitado)
     renewal-days: 7             # dias acrescentados por renovacao
   fine:

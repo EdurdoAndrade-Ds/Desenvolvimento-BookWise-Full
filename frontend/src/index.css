@@ -2,6 +2,60 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  :root.dark {
+    color-scheme: dark;
+  }
+
+  select option,
+  select optgroup {
+    background-color: theme('colors.white');
+    color: theme('colors.slate.800');
+  }
+
+  .dark select option,
+  .dark select optgroup {
+    background-color: theme('colors.slate.900');
+    color: theme('colors.slate.100');
+  }
+
+  @media (max-width: 1023px) {
+    button,
+    select,
+    input:not([type='checkbox']):not([type='radio']):not([type='hidden']) {
+      min-height: 44px;
+    }
+
+    button,
+    select {
+      min-width: 44px;
+    }
+
+    .mobile-touch {
+      display: inline-flex;
+      min-width: 44px;
+      min-height: 44px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .backend-status-tooltip[role='tooltip'] {
+      position: fixed;
+      top: var(--tooltip-top, 16px);
+      right: auto;
+      left: var(--tooltip-left, 16px);
+      width: min(16rem, calc(100vw - 2rem));
+      max-height: calc(100dvh - 2rem);
+      margin-top: 0;
+      overflow: auto;
+    }
+  }
+}
+
 html,
 body,
 #root {

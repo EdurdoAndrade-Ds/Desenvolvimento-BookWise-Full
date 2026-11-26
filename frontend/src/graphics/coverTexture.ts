@@ -1,13 +1,15 @@
-import { CanvasTexture, SRGBColorSpace, type Texture } from 'three';
+import { CanvasTexture, Color, SRGBColorSpace, type Texture } from 'three';
+import type { Book } from '../types/api';
+import { facedCoverColor } from './storefrontShelf';
 
-const TEXTURE_WIDTH = 512;
-const TEXTURE_HEIGHT = 768;
-const MARGIN = 44;
-const LABEL_FONT_SIZE = 24;
-const INITIAL_FONT_SIZE = 190;
-const TITLE_FONT_SIZE = 40;
-const AUTHOR_FONT_SIZE = 28;
-const TITLE_LINE_HEIGHT = 50;
+const TEXTURE_WIDTH = 768;
+const TEXTURE_HEIGHT = 1152;
+const MARGIN = 66;
+const LABEL_FONT_SIZE = 36;
+const INITIAL_FONT_SIZE = 285;
+const TITLE_FONT_SIZE = 84;
+const AUTHOR_FONT_SIZE = 44;
+const TITLE_LINE_HEIGHT = 96;
 const MAX_TITLE_LINES = 3;
 
 /** Textos usados para desenhar a capa procedural de um livro. */
@@ -15,6 +17,7 @@ export interface CoverTextureInput {
   title: string;
   author: string;
   background: string;
+  anisotropy?: number;
 }
 
 function wrap(context: CanvasRenderingContext2D, text: string, maxWidth: number): string[] {
@@ -38,14 +41,19 @@ function wrap(context: CanvasRenderingContext2D, text: string, maxWidth: number)
  * Gera a capa do livro em um canvas offscreen: selo da livraria, inicial do
  * titulo em marca d'agua, titulo e autor sobre a cor deterministica do livro.
  */
-export function createCoverTexture(input: CoverTextureInput): Texture {
+export function drawCoverCanvas(
+  input: CoverTextureInput,
+  width = TEXTURE_WIDTH,
+  height = TEXTURE_HEIGHT,
+): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
-  canvas.width = TEXTURE_WIDTH;
-  canvas.height = TEXTURE_HEIGHT;
+  canvas.width = width;
+  canvas.height = height;
   const context = canvas.getContext('2d');
   if (!context) {
     throw new Error('Canvas 2D indisponivel para gerar a textura da capa');
   }
+  context.scale(width / TEXTURE_WIDTH, height / TEXTURE_HEIGHT);
 
   context.fillStyle = input.background;
   context.fillRect(0, 0, TEXTURE_WIDTH, TEXTURE_HEIGHT);
@@ -61,29 +69,58 @@ export function createCoverTexture(input: CoverTextureInput): Texture {
   context.strokeRect(MARGIN / 2, MARGIN / 2, TEXTURE_WIDTH - MARGIN, TEXTURE_HEIGHT - MARGIN);
 
   context.textAlign = 'center';
-  context.fillStyle = 'rgba(255, 255, 255, 0.75)';
+  const ink = new Color(input.background).multiplyScalar(0.045).getStyle();
+  context.fillStyle = ink;
   context.font = `${LABEL_FONT_SIZE}px sans-serif`;
   context.fillText('BOOKWISE', TEXTURE_WIDTH / 2, MARGIN + LABEL_FONT_SIZE);
 
-  context.fillStyle = 'rgba(255, 255, 255, 0.2)';
+  context.fillStyle = ink;
+  context.globalAlpha = 0.12;
   context.font = `bold ${INITIAL_FONT_SIZE}px serif`;
-  context.fillText(input.title.charAt(0).toUpperCase(), TEXTURE_WIDTH / 2, TEXTURE_HEIGHT / 2);
+  context.fillText(input.title.charAt(0).toUpperCase(), TEXTURE_WIDTH / 2, TEXTURE_HEIGHT * 0.42);
+  context.globalAlpha = 1;
 
   const maxTextWidth = TEXTURE_WIDTH - MARGIN * 2;
-  context.fillStyle = 'rgba(255, 255, 255, 0.95)';
   context.font = `bold ${TITLE_FONT_SIZE}px serif`;
   const lines = wrap(context, input.title, maxTextWidth);
-  const titleTop = TEXTURE_HEIGHT * 0.66;
+  const titleTop = TEXTURE_HEIGHT * 0.62;
+  context.fillStyle = 'rgba(255, 255, 255, 0.18)';
+  context.fillRect(
+    MARGIN / 2,
+    titleTop - TITLE_FONT_SIZE,
+    TEXTURE_WIDTH - MARGIN,
+    lines.length * TITLE_LINE_HEIGHT + TITLE_FONT_SIZE / 2,
+  );
+  context.fillStyle = ink;
   lines.forEach((line, index) => {
-    context.fillText(line, TEXTURE_WIDTH / 2, titleTop + index * TITLE_LINE_HEIGHT);
+    context.fillText(line, TEXTURE_WIDTH / 2, titleTop + index * TITLE_LINE_HEIGHT, maxTextWidth);
   });
 
-  context.fillStyle = 'rgba(255, 255, 255, 0.72)';
+  context.fillStyle = ink;
   context.font = `${AUTHOR_FONT_SIZE}px sans-serif`;
-  context.fillText(input.author, TEXTURE_WIDTH / 2, TEXTURE_HEIGHT - MARGIN * 1.5);
+  context.fillText(input.author, TEXTURE_WIDTH / 2, TEXTURE_HEIGHT - MARGIN * 1.5, maxTextWidth);
 
+  return canvas;
+}
+
+export function createBookCoverImageData(book: Book, width: number, height: number): ImageData {
+  const canvas = drawCoverCanvas(
+    { title: book.title, author: book.author, background: facedCoverColor(book) },
+    width,
+    height,
+  );
+  const context = canvas.getContext('2d');
+  if (!context) {
+    throw new Error('Canvas 2D indisponivel para gerar a textura da capa');
+  }
+  return context.getImageData(0, 0, width, height);
+}
+
+export function createCoverTexture(input: CoverTextureInput): Texture {
+  const canvas = drawCoverCanvas(input);
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
+  texture.anisotropy = input.anisotropy ?? 1;
   return texture;
 }
 
@@ -111,16 +148,23 @@ export function createBackCoverTexture(input: CoverTextureInput): Texture {
   context.strokeRect(MARGIN / 2, MARGIN / 2, TEXTURE_WIDTH - MARGIN, TEXTURE_HEIGHT - MARGIN);
 
   context.textAlign = 'center';
-  context.fillStyle = 'rgba(255, 255, 255, 0.65)';
+  const ink = new Color(input.background).multiplyScalar(0.045).getStyle();
+  context.fillStyle = ink;
   context.font = `${LABEL_FONT_SIZE}px sans-serif`;
   context.fillText('BOOKWISE', TEXTURE_WIDTH / 2, TEXTURE_HEIGHT / 2);
 
-  context.fillStyle = 'rgba(255, 255, 255, 0.55)';
+  context.fillStyle = ink;
   context.font = `${AUTHOR_FONT_SIZE}px sans-serif`;
-  context.fillText(input.author, TEXTURE_WIDTH / 2, TEXTURE_HEIGHT - MARGIN * 1.5);
+  context.fillText(
+    input.author,
+    TEXTURE_WIDTH / 2,
+    TEXTURE_HEIGHT - MARGIN * 1.5,
+    TEXTURE_WIDTH - MARGIN * 2,
+  );
 
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
+  texture.anisotropy = input.anisotropy ?? 1;
   return texture;
 }
 
@@ -195,5 +239,6 @@ export function createPageTexture(input: CoverTextureInput): Texture {
 
   const texture = new CanvasTexture(canvas);
   texture.colorSpace = SRGBColorSpace;
+  texture.anisotropy = input.anisotropy ?? 1;
   return texture;
 }

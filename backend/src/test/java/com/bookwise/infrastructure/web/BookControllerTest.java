@@ -34,6 +34,7 @@ class BookControllerTest {
                 "isbn", isbn,
                 "format", "PHYSICAL",
                 "price", 49.90,
+                "loanPrice", 4.90,
                 "stock", 5));
     }
 
@@ -45,6 +46,7 @@ class BookControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").isNumber())
                 .andExpect(jsonPath("$.title").value("Livro A"))
+                .andExpect(jsonPath("$.loanPrice").value(4.90))
                 .andReturn()
                 .getResponse()
                 .getHeader("Location");
@@ -99,6 +101,7 @@ class BookControllerTest {
                 "isbn", "5555555555555",
                 "format", "PHYSICAL",
                 "price", 59.90,
+                "loanPrice", 8.90,
                 "stock", 12));
 
         mockMvc.perform(put(location)
@@ -107,11 +110,20 @@ class BookControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Livro D editado"))
                 .andExpect(jsonPath("$.price").value(59.90))
+                .andExpect(jsonPath("$.loanPrice").value(8.90))
                 .andExpect(jsonPath("$.stock").value(12));
 
         mockMvc.perform(get(location))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.stock").value(12));
+    }
+
+    @Test
+    void negativeLoanPriceReturns400() throws Exception {
+        var body = objectMapper.readTree(bookJson("Livro negativo", "N" + System.nanoTime()));
+        ((com.fasterxml.jackson.databind.node.ObjectNode) body).put("loanPrice", -4.90);
+        mockMvc.perform(post("/api/v1/books").contentType(MediaType.APPLICATION_JSON).content(body.toString()))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

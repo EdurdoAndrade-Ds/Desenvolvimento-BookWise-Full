@@ -195,7 +195,7 @@ class ReservationServiceTest {
 
     private ReservationService service(boolean holdStock) {
         BusinessProperties properties = new BusinessProperties(
-                new BusinessProperties.Loan(14, 5, 5, true, 2, 7),
+                new BusinessProperties.Loan(14, 5, 5, true, 2, 7, true),
                 new BusinessProperties.Fine(new BigDecimal("2.00")),
                 new BusinessProperties.Reservation(EXPIRATION_DAYS, holdStock),
                 new BusinessProperties.Report(3, 7, 5));
@@ -214,7 +214,7 @@ class ReservationServiceTest {
 
     private Book book(Integer stock) {
         return new Book(10L, "Book", "Author", "isbn", "Genre", 2024,
-                BookFormat.PHYSICAL, new BigDecimal("10.00"), stock, null, List.of(), null);
+                BookFormat.PHYSICAL, new BigDecimal("10.00"), null, stock, null, List.of(), null);
     }
 
     private Reservation reservation(ReservationStatus status, LocalDate expiration) {

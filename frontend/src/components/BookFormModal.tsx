@@ -22,6 +22,7 @@ function toInput(book?: Book): BookInput {
       publishedYear: undefined,
       format: 'PHYSICAL',
       price: undefined,
+      loanPrice: undefined,
       stock: undefined,
       coverUrl: '',
       categoryIds: [],
@@ -35,6 +36,7 @@ function toInput(book?: Book): BookInput {
     publishedYear: book.publishedYear ?? undefined,
     format: book.format,
     price: book.price ?? undefined,
+    loanPrice: book.loanPrice ?? undefined,
     stock: book.stock ?? undefined,
     coverUrl: book.coverUrl ?? '',
     categoryIds: (book.categories ?? []).map((c) => c.id),
@@ -66,9 +68,11 @@ export default function BookFormModal({ onClose, onSaved, book }: BookFormModalP
     setForm((prev) => ({
       ...prev,
       [field]:
-        field === 'price' || field === 'stock' || field === 'publishedYear'
+        field === 'price' || field === 'loanPrice' || field === 'stock' || field === 'publishedYear'
           ? value === ''
-            ? undefined
+            ? field === 'loanPrice'
+              ? null
+              : undefined
             : Number(value)
           : field === 'format'
             ? (value as BookFormat)
@@ -96,146 +100,168 @@ export default function BookFormModal({ onClose, onSaved, book }: BookFormModalP
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white shadow-xl dark:bg-slate-900">
-        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 max-lg:!m-0">
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={book ? 'Editar livro' : 'Novo livro'}
+        className="w-full max-w-lg rounded-xl bg-white shadow-xl max-lg:flex max-lg:max-h-[calc(100dvh-2rem)] max-lg:flex-col max-lg:overflow-hidden dark:bg-slate-900"
+      >
+        <div className="flex shrink-0 items-center justify-between border-b border-slate-100 px-6 py-4 dark:border-slate-800">
           <h2 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
             {book ? 'Editar livro' : 'Novo livro'}
           </h2>
           <button
             onClick={onClose}
+            aria-label="Fechar formulário"
             className="rounded-full p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 px-6 py-5">
-          {error && (
-            <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
-              {error}
-            </div>
-          )}
+        <form
+          onSubmit={handleSubmit}
+          className="px-6 py-5 max-lg:flex max-lg:min-h-0 max-lg:flex-1 max-lg:flex-col max-lg:p-0"
+        >
+          <div className="space-y-4 max-lg:min-h-0 max-lg:flex-1 max-lg:overflow-y-auto max-lg:overscroll-y-contain max-lg:px-6 max-lg:py-5">
+            {error && (
+              <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950 dark:text-red-300">
+                {error}
+              </div>
+            )}
 
-          <Field label="Título">
-            <input
-              required
-              value={form.title}
-              onChange={(e) => update('title', e.target.value)}
-              className={inputClass}
-            />
-          </Field>
-
-          <Field label="Autor">
-            <input
-              required
-              value={form.author}
-              onChange={(e) => update('author', e.target.value)}
-              className={inputClass}
-            />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="ISBN">
+            <Field label="Título">
               <input
                 required
-                value={form.isbn}
-                onChange={(e) => update('isbn', e.target.value)}
+                value={form.title}
+                onChange={(e) => update('title', e.target.value)}
                 className={inputClass}
               />
             </Field>
-            <Field label="Formato">
-              <select
-                value={form.format}
-                onChange={(e) => update('format', e.target.value)}
-                className={inputClass}
-              >
-                <option value="PHYSICAL">Físico</option>
-                <option value="DIGITAL">Digital</option>
-              </select>
-            </Field>
-          </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Gênero">
+            <Field label="Autor">
               <input
-                value={form.genre ?? ''}
-                onChange={(e) => update('genre', e.target.value)}
-                placeholder="Ex.: Tecnologia"
+                required
+                value={form.author}
+                onChange={(e) => update('author', e.target.value)}
                 className={inputClass}
               />
             </Field>
-            <Field label="Ano de publicação">
-              <input
-                type="number"
-                value={form.publishedYear ?? ''}
-                onChange={(e) => update('publishedYear', e.target.value)}
-                placeholder="Ex.: 2008"
-                className={inputClass}
-              />
-            </Field>
-          </div>
 
-          <Field label="URL da capa">
-            <input
-              type="url"
-              value={form.coverUrl ?? ''}
-              onChange={(e) => update('coverUrl', e.target.value)}
-              placeholder="https://.../capa.jpg"
-              className={inputClass}
-            />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Preço (R$)">
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                value={form.price ?? ''}
-                onChange={(e) => update('price', e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-            <Field label="Estoque">
-              <input
-                type="number"
-                min="0"
-                value={form.stock ?? ''}
-                onChange={(e) => update('stock', e.target.value)}
-                className={inputClass}
-              />
-            </Field>
-          </div>
-
-          {categories.length > 0 && (
-            <div>
-              <span className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">
-                Categorias
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((c) => {
-                  const active = (form.categoryIds ?? []).includes(c.id);
-                  return (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => toggleCategory(c.id)}
-                      className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
-                        active
-                          ? 'bg-brand-600 text-white'
-                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
-                      }`}
-                    >
-                      {c.name}
-                    </button>
-                  );
-                })}
-              </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="ISBN">
+                <input
+                  required
+                  value={form.isbn}
+                  onChange={(e) => update('isbn', e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Formato">
+                <select
+                  value={form.format}
+                  onChange={(e) => update('format', e.target.value)}
+                  className={inputClass}
+                >
+                  <option value="PHYSICAL">Físico</option>
+                  <option value="DIGITAL">Digital</option>
+                </select>
+              </Field>
             </div>
-          )}
 
-          <div className="flex justify-end gap-3 pt-2">
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Gênero">
+                <input
+                  value={form.genre ?? ''}
+                  onChange={(e) => update('genre', e.target.value)}
+                  placeholder="Ex.: Tecnologia"
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Ano de publicação">
+                <input
+                  type="number"
+                  value={form.publishedYear ?? ''}
+                  onChange={(e) => update('publishedYear', e.target.value)}
+                  placeholder="Ex.: 2008"
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+
+            <Field label="URL da capa">
+              <input
+                type="url"
+                value={form.coverUrl ?? ''}
+                onChange={(e) => update('coverUrl', e.target.value)}
+                placeholder="https://.../capa.jpg"
+                className={inputClass}
+              />
+            </Field>
+
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Preço (R$)">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.price ?? ''}
+                  onChange={(e) => update('price', e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+              <Field label="Valor do empréstimo (R$)">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={form.loanPrice ?? ''}
+                  onChange={(e) => update('loanPrice', e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Estoque">
+                <input
+                  type="number"
+                  min="0"
+                  value={form.stock ?? ''}
+                  onChange={(e) => update('stock', e.target.value)}
+                  className={inputClass}
+                />
+              </Field>
+            </div>
+
+            {categories.length > 0 && (
+              <div>
+                <span className="mb-1 block text-sm font-medium text-slate-600 dark:text-slate-300">
+                  Categorias
+                </span>
+                <div className="flex flex-wrap gap-2">
+                  {categories.map((c) => {
+                    const active = (form.categoryIds ?? []).includes(c.id);
+                    return (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => toggleCategory(c.id)}
+                        className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+                          active
+                            ? 'bg-brand-600 text-white'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700'
+                        }`}
+                      >
+                        {c.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+          <div className="mt-4 flex shrink-0 justify-end gap-3 pt-2 max-lg:mt-0 max-lg:border-t max-lg:border-slate-100 max-lg:px-6 max-lg:py-4 dark:max-lg:border-slate-800">
             <button
               type="button"
               onClick={onClose}

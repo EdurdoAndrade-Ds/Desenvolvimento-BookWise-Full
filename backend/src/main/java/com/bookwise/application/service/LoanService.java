@@ -14,11 +14,13 @@ import com.bookwise.domain.exception.UserNotFoundException;
 import com.bookwise.domain.model.Book;
 import com.bookwise.domain.model.Loan;
 import com.bookwise.domain.model.LoanItem;
+import com.bookwise.domain.model.LoanChargeStatus;
 import com.bookwise.domain.model.User;
 import com.bookwise.domain.port.BookRepository;
 import com.bookwise.domain.port.LoanRepository;
 import com.bookwise.domain.port.UserRepository;
 import java.time.LocalDate;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -112,7 +114,7 @@ public class LoanService {
             int quantity = itemReq.quantityOrDefault();
             Book book = findBook(itemReq.bookId());
             stockPolicy.withdraw(book, quantity);
-            items.add(new LoanItem(book.id(), book.title(), quantity));
+            items.add(loanItem(book, quantity));
         }
         return persist(user, items, request.dueDate());
     }
@@ -133,7 +135,7 @@ public class LoanService {
         if (!stockAlreadyHeld) {
             stockPolicy.withdraw(book, 1);
         }
-        return persist(user, List.of(new LoanItem(book.id(), book.title(), 1)), null);
+        return persist(user, List.of(loanItem(book, 1)), null);
     }
 
     /**
@@ -226,14 +228,36 @@ public class LoanService {
         LocalDate dueDate = requestedDueDate != null
                 ? requestedDueDate
                 : today.plusDays(properties.loan().defaultDays());
+        BigDecimal amount = items.stream()
+                .map(item -> item.unitLoanPrice().multiply(BigDecimal.valueOf(item.quantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
         Loan saved = loanRepository.save(
-                new Loan(null, user.id(), user.name(), items, today, dueDate, null, 0, null));
+                new Loan(null, user.id(), user.name(), items, today, dueDate, null, 0,
+                        amount, amount.signum() > 0 ? LoanChargeStatus.PENDING : null, null, null));
         return LoanMapper.toResponse(saved, today);
+    }
+
+    private LoanItem loanItem(Book book, int quantity) {
+        return new LoanItem(book.id(), book.title(), quantity,
+                book.loanPrice() != null ? book.loanPrice() : BigDecimal.ZERO);
+    }
+
+    public LoanResponse pay(Long id) {
+        Loan loan = loanRepository.findById(id)
+                .orElseThrow(() -> new LoanNotFoundException(id));
+        if (loan.chargeStatus() != LoanChargeStatus.PENDING) {
+            throw new BusinessException("Emprestimo nao possui cobranca pendente");
+        }
+        LocalDate today = LocalDate.now();
+        return LoanMapper.toResponse(loanRepository.save(loan.withChargePaid(today)), today);
     }
 
     /** Limites de emprestimo do usuario: itens por pedido, itens em aberto e multa pendente. */
     private void validateNewLoan(User user, int quantity) {
         BusinessProperties.Loan config = properties.loan();
+        if (config.blockOnPendingCharges() && loanRepository.existsPendingChargeByUserId(user.id())) {
+            throw new BusinessException("Usuario possui cobranca de emprestimo pendente e nao pode realizar novos emprestimos");
+        }
         if (config.maxItemsPerLoan() > 0 && quantity > config.maxItemsPerLoan()) {
             throw new BusinessException(
                     "Limite de itens por emprestimo excedido (maximo: " + config.maxItemsPerLoan() + ")");

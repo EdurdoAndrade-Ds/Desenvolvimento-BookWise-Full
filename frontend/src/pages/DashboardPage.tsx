@@ -172,32 +172,38 @@ export default function DashboardPage() {
         {topBooks.length === 0 ? (
           <p className="p-6 text-sm text-slate-400">Nenhum empréstimo registrado.</p>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-400">
-              <tr>
-                <th className="px-6 py-3 font-medium">Livro</th>
-                <th className="px-6 py-3 font-medium">Autor</th>
-                <th className="px-6 py-3 font-medium">Empréstimos</th>
-                <th className="px-6 py-3 font-medium">Unidades</th>
-                <th className="px-6 py-3 font-medium">Em aberto</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {topBooks.map((book) => (
-                <tr key={book.bookId} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <td className="px-6 py-3 font-medium text-slate-800 dark:text-slate-100">
-                    {book.title}
-                  </td>
-                  <td className="px-6 py-3 text-slate-600 dark:text-slate-300">{book.author}</td>
-                  <td className="px-6 py-3 text-slate-600 dark:text-slate-300">{book.loanCount}</td>
-                  <td className="px-6 py-3 text-slate-600 dark:text-slate-300">
-                    {book.unitsLoaned}
-                  </td>
-                  <td className="px-6 py-3 text-slate-600 dark:text-slate-300">{book.openLoans}</td>
+          <div className="max-lg:overflow-x-auto max-lg:overscroll-x-contain">
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-slate-400">
+                <tr>
+                  <th className="px-6 py-3 font-medium">Livro</th>
+                  <th className="px-6 py-3 font-medium">Autor</th>
+                  <th className="px-6 py-3 font-medium">Empréstimos</th>
+                  <th className="px-6 py-3 font-medium">Unidades</th>
+                  <th className="px-6 py-3 font-medium">Em aberto</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {topBooks.map((book) => (
+                  <tr key={book.bookId} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td className="px-6 py-3 font-medium text-slate-800 dark:text-slate-100">
+                      {book.title}
+                    </td>
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-300">{book.author}</td>
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-300">
+                      {book.loanCount}
+                    </td>
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-300">
+                      {book.unitsLoaned}
+                    </td>
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-300">
+                      {book.openLoans}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
 
@@ -211,38 +217,40 @@ export default function DashboardPage() {
         {recentLoans.length === 0 ? (
           <p className="p-6 text-sm text-slate-400">Nenhum empréstimo registrado.</p>
         ) : (
-          <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wide text-slate-400">
-              <tr>
-                <th className="px-6 py-3 font-medium">Usuário</th>
-                <th className="px-6 py-3 font-medium">Livros</th>
-                <th className="px-6 py-3 font-medium">Data</th>
-                <th className="px-6 py-3 font-medium">Status</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-              {recentLoans.map((loan) => (
-                <tr key={loan.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                  <td className="px-6 py-3 font-medium text-slate-800 dark:text-slate-100">
-                    {loan.userName}
-                  </td>
-                  <td className="px-6 py-3 text-slate-600 dark:text-slate-300">
-                    {loan.items.map((i) => i.bookTitle).join(', ')}
-                  </td>
-                  <td className="px-6 py-3 text-slate-500 dark:text-slate-400">
-                    {formatDate(loan.loanDate)}
-                  </td>
-                  <td className="px-6 py-3">
-                    <span
-                      className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${LOAN_STATUS_STYLES[loan.status]}`}
-                    >
-                      {LOAN_STATUS_LABELS[loan.status]}
-                    </span>
-                  </td>
+          <div className="max-lg:overflow-x-auto max-lg:overscroll-x-contain">
+            <table className="w-full text-left text-sm">
+              <thead className="text-xs uppercase tracking-wide text-slate-400">
+                <tr>
+                  <th className="px-6 py-3 font-medium">Usuário</th>
+                  <th className="px-6 py-3 font-medium">Livros</th>
+                  <th className="px-6 py-3 font-medium">Data</th>
+                  <th className="px-6 py-3 font-medium">Status</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                {recentLoans.map((loan) => (
+                  <tr key={loan.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                    <td className="px-6 py-3 font-medium text-slate-800 dark:text-slate-100">
+                      {loan.userName}
+                    </td>
+                    <td className="px-6 py-3 text-slate-600 dark:text-slate-300">
+                      {loan.items.map((i) => i.bookTitle).join(', ')}
+                    </td>
+                    <td className="px-6 py-3 text-slate-500 dark:text-slate-400">
+                      {formatDate(loan.loanDate)}
+                    </td>
+                    <td className="px-6 py-3">
+                      <span
+                        className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-medium ${LOAN_STATUS_STYLES[loan.status]}`}
+                      >
+                        {LOAN_STATUS_LABELS[loan.status]}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </div>

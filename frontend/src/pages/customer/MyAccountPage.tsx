@@ -26,18 +26,21 @@ export default function MyAccountPage() {
       </div>
 
       <div className="flex flex-wrap gap-3 text-sm">
-        <Link to="/my-loans" className="rounded-lg bg-brand-600 px-4 py-2 font-medium text-white">
+        <Link
+          to="/my-loans"
+          className="mobile-touch rounded-lg bg-brand-600 px-4 py-2 font-medium text-white"
+        >
           Meus empréstimos
         </Link>
         <Link
           to="/my-reservations"
-          className="rounded-lg border px-4 py-2 font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300"
+          className="mobile-touch rounded-lg border px-4 py-2 font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300"
         >
           Minhas reservas
         </Link>
         <Link
           to="/my-purchases"
-          className="rounded-lg border px-4 py-2 font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300"
+          className="mobile-touch rounded-lg border px-4 py-2 font-medium text-slate-600 dark:border-slate-700 dark:text-slate-300"
         >
           Minhas compras
         </Link>

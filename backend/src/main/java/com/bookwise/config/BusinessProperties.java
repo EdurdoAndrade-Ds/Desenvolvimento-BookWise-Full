@@ -36,6 +36,7 @@ public record BusinessProperties(
      * @param blockWhenFinePending   quando {@code true}, impede novo emprestimo para usuario com multa pendente
      * @param maxRenewals            quantidade maxima de renovacoes por emprestimo ({@code 0} = renovacao desabilitada)
      * @param renewalDays            dias acrescentados a data prevista a cada renovacao
+     * @param blockOnPendingCharges  bloqueia novos emprestimos quando ha cobranca de emprestimo pendente
      */
     public record Loan(
             @DefaultValue("14") int defaultDays,
@@ -43,7 +44,8 @@ public record BusinessProperties(
             @DefaultValue("5") int maxItemsPerLoan,
             @DefaultValue("true") boolean blockWhenFinePending,
             @DefaultValue("2") int maxRenewals,
-            @DefaultValue("7") int renewalDays) {
+            @DefaultValue("7") int renewalDays,
+            @DefaultValue("true") boolean blockOnPendingCharges) {
     }
 
     /**

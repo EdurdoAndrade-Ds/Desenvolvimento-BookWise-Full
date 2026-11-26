@@ -1,16 +1,22 @@
+import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import {
-  Boxes,
   Heart,
   LayoutGrid,
-  Palette,
   Receipt,
   ShoppingBag,
   UserCircle,
   Bookmark,
+  Palette,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCurrentCustomer } from '../context/useCurrentCustomer';
+import { SidebarBrand, SidebarCollapseButton } from './SidebarChrome';
+import {
+  SIDEBAR_SURFACE_CLASSES,
+  sidebarItemClassName,
+  sidebarWidthClasses,
+} from './sidebarStyles';
 
 const NAV_ITEMS: { to: string; label: string; icon: LucideIcon; end?: boolean }[] = [
   { to: '/', label: 'Catálogo', icon: LayoutGrid, end: true },
@@ -18,8 +24,7 @@ const NAV_ITEMS: { to: string; label: string; icon: LucideIcon; end?: boolean }[
   { to: '/my-reservations', label: 'Reservas', icon: Heart },
   { to: '/my-purchases', label: 'Compras', icon: ShoppingBag },
   { to: '/my-fines', label: 'Multas', icon: Receipt },
-  { to: '/shelf-3d', label: 'Estante 3D', icon: Boxes },
-  { to: '/cover-studio', label: 'Cover Studio', icon: Palette },
+  { to: '/cover-studio', label: 'Estúdio de capas', icon: Palette },
 ];
 
 function initials(name?: string) {
@@ -35,51 +40,73 @@ function initials(name?: string) {
 export default function CustomerSidebar() {
   const { customer } = useCurrentCustomer();
   const avatar = initials(customer?.name);
+  const [expanded, setExpanded] = useState(() => {
+    try {
+      return localStorage.getItem('bookwise-sidebar-expanded') === 'true';
+    } catch {
+      return false;
+    }
+  });
+
+  function toggleExpanded() {
+    const next = !expanded;
+    setExpanded(next);
+    try {
+      localStorage.setItem('bookwise-sidebar-expanded', String(next));
+    } catch {
+      // Storage may be unavailable in private browsing.
+    }
+  }
 
   return (
-    <aside className="sticky top-0 z-10 flex w-full shrink-0 items-center gap-3 border-b border-cream-200 bg-cream-100 px-4 py-3 lg:h-screen lg:w-24 lg:flex-col lg:justify-between lg:border-b-0 lg:border-r lg:py-6 dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex min-w-0 flex-1 items-center gap-3 lg:flex-none lg:flex-col lg:gap-6">
-        <Link
-          to="/"
-          className="shrink-0 text-sm font-bold tracking-tight text-slate-800 lg:text-base dark:text-slate-100"
-        >
-          Bookstore
-        </Link>
-        <Link
+    <aside
+      aria-label="Menu do cliente"
+      className={`sticky top-0 z-10 flex w-full shrink-0 items-center gap-3 border-b px-4 py-3 lg:h-screen lg:flex-col lg:items-stretch lg:gap-0 lg:border-b-0 lg:border-r lg:p-0 ${SIDEBAR_SURFACE_CLASSES} ${sidebarWidthClasses(!expanded, true)}`}
+    >
+      <Link to="/" title="BookWise" aria-label="BookWise" className="mobile-touch shrink-0">
+        <SidebarBrand collapsed={!expanded} className="max-lg:p-0" />
+      </Link>
+      <nav
+        id="customer-navigation"
+        aria-label="Navegação do cliente"
+        className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto lg:flex-col lg:items-stretch lg:px-3 lg:py-4"
+      >
+        <NavLink
           to="/my-account"
           title="Minha conta"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-600 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
+          aria-label="Minha conta"
+          className={({ isActive }) =>
+            `${sidebarItemClassName(isActive, !expanded)} shrink-0 max-lg:justify-center`
+          }
         >
-          {avatar ?? <UserCircle className="h-6 w-6" />}
-        </Link>
-        <nav className="flex min-w-0 items-center gap-1 overflow-x-auto lg:flex-col lg:gap-2 lg:overflow-visible">
-          {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              title={label}
-              aria-label={label}
-              className={({ isActive }) =>
-                [
-                  'flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl transition-colors',
-                  isActive
-                    ? 'bg-white text-brand-600 shadow-sm dark:bg-slate-800 dark:text-brand-400'
-                    : 'text-slate-500 hover:bg-white hover:text-slate-800 dark:text-slate-400 dark:hover:bg-slate-800',
-                ].join(' ')
-              }
-            >
-              <Icon className="h-5 w-5" />
-            </NavLink>
-          ))}
-        </nav>
-      </div>
-      <Link
-        to="/my-account"
-        className="shrink-0 rounded-2xl bg-emerald-500 px-3 py-2 text-xs font-semibold tracking-wide text-white shadow-sm transition hover:bg-emerald-600 lg:[writing-mode:vertical-rl] lg:px-2 lg:py-6"
-      >
-        Subscribe
-      </Link>
+          <span className="flex h-5 w-5 shrink-0 items-center justify-center text-xs font-semibold">
+            {avatar ?? <UserCircle className="h-5 w-5" />}
+          </span>
+          {expanded && <span className="hidden lg:inline">Minha conta</span>}
+        </NavLink>
+        {NAV_ITEMS.map(({ to, label, icon: Icon, end }) => (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            title={label}
+            aria-label={label}
+            className={({ isActive }) =>
+              `${sidebarItemClassName(isActive, !expanded)} shrink-0 max-lg:justify-center`
+            }
+          >
+            <Icon className="h-5 w-5 shrink-0" />
+            {expanded && (
+              <span className="hidden whitespace-nowrap text-sm lg:inline">{label}</span>
+            )}
+          </NavLink>
+        ))}
+      </nav>
+      <SidebarCollapseButton
+        collapsed={!expanded}
+        onToggle={toggleExpanded}
+        controls="customer-navigation"
+      />
     </aside>
   );
 }

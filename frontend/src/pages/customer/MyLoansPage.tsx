@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from 'react';
 import type { Loan } from '../../types/api';
 import { loansService } from '../../services/loansService';
 import { ApiError } from '../../services/http';
-import { formatDate } from '../../lib/format';
+import { formatCurrency, formatDate } from '../../lib/format';
 import { useCurrentCustomer } from '../../context/useCurrentCustomer';
 import { LOAN_STATUS_LABELS, LOAN_STATUS_STYLES } from '../../lib/loanStatus';
 
@@ -10,6 +10,8 @@ export default function MyLoansPage() {
   const { customer } = useCurrentCustomer();
   const [items, setItems] = useState<Loan[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [payingId, setPayingId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!customer) return;
@@ -26,8 +28,24 @@ export default function MyLoansPage() {
   useEffect(() => {
     setItems([]);
     setError(null);
+    setSuccess(null);
     void load();
   }, [load]);
+
+  const pay = async (loan: Loan) => {
+    setPayingId(loan.id);
+    setError(null);
+    setSuccess(null);
+    try {
+      await loansService.pay(loan.id);
+      await load();
+      setSuccess('Pagamento registrado com sucesso.');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Não foi possível registrar o pagamento.');
+    } finally {
+      setPayingId(null);
+    }
+  };
 
   if (!customer) {
     return (
@@ -36,7 +54,7 @@ export default function MyLoansPage() {
       </CustomerPage>
     );
   }
-  if (error) {
+  if (error && items.length === 0) {
     return (
       <CustomerPage title="Meus empréstimos">
         <ErrorMessage message={error} />
@@ -53,6 +71,12 @@ export default function MyLoansPage() {
 
   return (
     <CustomerPage title="Meus empréstimos">
+      {error && <ErrorMessage message={error} />}
+      {success && (
+        <p role="status" className="rounded-xl bg-emerald-50 p-4 text-emerald-800">
+          {success}
+        </p>
+      )}
       <div className="space-y-3">
         {items.map((loan) => (
           <div
@@ -68,6 +92,23 @@ export default function MyLoansPage() {
                   Empréstimo em {formatDate(loan.loanDate)} · devolução prevista em{' '}
                   {formatDate(loan.dueDate)}
                 </p>
+                <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">
+                  {formatCurrency(loan.chargeAmount)} ·{' '}
+                  {loan.chargeStatus === 'PENDING'
+                    ? 'Pendente'
+                    : loan.chargeStatus === 'PAID'
+                      ? 'Pago'
+                      : 'Grátis'}
+                </p>
+                {loan.chargeStatus === 'PENDING' && (
+                  <button
+                    onClick={() => void pay(loan)}
+                    disabled={payingId !== null}
+                    className="mt-3 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-50"
+                  >
+                    {payingId === loan.id ? 'Processando...' : 'Pagar'}
+                  </button>
+                )}
               </div>
               <span
                 className={`inline-flex h-fit rounded-full px-2.5 py-0.5 text-xs font-medium ${LOAN_STATUS_STYLES[loan.status]}`}

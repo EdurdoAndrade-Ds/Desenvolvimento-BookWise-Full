@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
 import Book3D, { type BookMaterialSettings } from './Book3D';
 import type { ShelfBook, ShelfLayout } from '../../graphics/shelfLayout';
+import GraphicsDebug, { GraphicsFrame } from './GraphicsDebug';
 
 const FLOOR_SIZE = 40;
 const WOOD_COLOR = '#8b5a2b';
@@ -48,75 +49,92 @@ export default function Bookshelf3D({
   const cameraPosition: [number, number, number] = [distance * 0.35, distance * 0.25, distance];
 
   return (
-    <Canvas shadows dpr={[1, 2]} className="rounded-2xl">
-      {settings.orthographic ? (
-        <OrthographicCamera
+    <GraphicsDebug>
+      <Canvas shadows dpr={[1, 2]} className="rounded-2xl">
+        {settings.orthographic ? (
+          <OrthographicCamera
+            makeDefault
+            position={[0, 0, distance]}
+            zoom={ORTHOGRAPHIC_ZOOM_FACTOR / framing}
+            near={0.1}
+            far={Math.max(60, distance * 5)}
+          />
+        ) : (
+          <PerspectiveCamera
+            makeDefault
+            position={cameraPosition}
+            fov={45}
+            near={0.1}
+            far={Math.max(60, distance * 5)}
+          />
+        )}
+        <OrbitControls
           makeDefault
-          position={[0, 0, distance]}
-          zoom={ORTHOGRAPHIC_ZOOM_FACTOR / framing}
+          enablePan
+          target={[0, 0, 0]}
+          minDistance={2}
+          maxDistance={Math.max(30, distance * 3)}
         />
-      ) : (
-        <PerspectiveCamera makeDefault position={cameraPosition} fov={45} />
-      )}
-      <OrbitControls makeDefault enablePan target={[0, 0, 0]} />
 
-      <color attach="background" args={['#0f172a']} />
-      <ambientLight intensity={settings.lightIntensity * AMBIENT_RATIO} />
-      <directionalLight
-        position={KEY_LIGHT_POSITION}
-        intensity={settings.lightIntensity}
-        castShadow={settings.shadows}
-        shadow-mapSize-width={SHADOW_MAP_SIZE}
-        shadow-mapSize-height={SHADOW_MAP_SIZE}
-      />
+        <color attach="background" args={['#0f172a']} />
+        <ambientLight intensity={settings.lightIntensity * AMBIENT_RATIO} />
+        <directionalLight
+          position={KEY_LIGHT_POSITION}
+          intensity={settings.lightIntensity}
+          castShadow={settings.shadows}
+          shadow-mapSize-width={SHADOW_MAP_SIZE}
+          shadow-mapSize-height={SHADOW_MAP_SIZE}
+        />
 
-      <Suspense fallback={null}>
-        <group position={[0, verticalCenter, 0]}>
-          {layout.boards.map((board) => (
-            <mesh key={board.index} position={[0, board.y, 0]} castShadow receiveShadow>
-              <boxGeometry
-                args={[board.width + SIDE_PANEL_THICKNESS * 2, board.thickness, board.depth]}
+        <Suspense fallback={null}>
+          <group position={[0, verticalCenter, 0]}>
+            {layout.boards.map((board) => (
+              <mesh key={board.index} position={[0, board.y, 0]} castShadow receiveShadow>
+                <boxGeometry
+                  args={[board.width + SIDE_PANEL_THICKNESS * 2, board.thickness, board.depth]}
+                />
+                <meshStandardMaterial color={WOOD_COLOR} roughness={0.8} />
+              </mesh>
+            ))}
+
+            {[-1, 1].map((side) => (
+              <mesh
+                key={side}
+                position={[
+                  side * (layout.width / 2 + SIDE_PANEL_THICKNESS / 2),
+                  (layout.topY + layout.bottomY) / 2,
+                  0,
+                ]}
+                castShadow
+                receiveShadow
+              >
+                <boxGeometry args={[SIDE_PANEL_THICKNESS, structureHeight, layout.depth + 0.1]} />
+                <meshStandardMaterial color={WOOD_COLOR} roughness={0.8} />
+              </mesh>
+            ))}
+
+            {layout.books.map((entry) => (
+              <Book3D
+                key={entry.book.id}
+                entry={entry}
+                selected={entry.book.id === selectedBookId}
+                settings={settings}
+                onSelect={onSelect}
               />
-              <meshStandardMaterial color={WOOD_COLOR} roughness={0.8} />
-            </mesh>
-          ))}
+            ))}
+          </group>
 
-          {[-1, 1].map((side) => (
-            <mesh
-              key={side}
-              position={[
-                side * (layout.width / 2 + SIDE_PANEL_THICKNESS / 2),
-                (layout.topY + layout.bottomY) / 2,
-                0,
-              ]}
-              castShadow
-              receiveShadow
-            >
-              <boxGeometry args={[SIDE_PANEL_THICKNESS, structureHeight, layout.depth + 0.1]} />
-              <meshStandardMaterial color={WOOD_COLOR} roughness={0.8} />
-            </mesh>
-          ))}
-
-          {layout.books.map((entry) => (
-            <Book3D
-              key={entry.book.id}
-              entry={entry}
-              selected={entry.book.id === selectedBookId}
-              settings={settings}
-              onSelect={onSelect}
-            />
-          ))}
-        </group>
-
-        <mesh
-          rotation={[-Math.PI / 2, 0, 0]}
-          position={[0, verticalCenter + layout.bottomY - 0.02, 0]}
-          receiveShadow
-        >
-          <planeGeometry args={[FLOOR_SIZE, FLOOR_SIZE]} />
-          <meshStandardMaterial color={FLOOR_COLOR} roughness={1} />
-        </mesh>
-      </Suspense>
-    </Canvas>
+          <mesh
+            rotation={[-Math.PI / 2, 0, 0]}
+            position={[0, verticalCenter + layout.bottomY - 0.02, 0]}
+            receiveShadow
+          >
+            <planeGeometry args={[FLOOR_SIZE, FLOOR_SIZE]} />
+            <meshStandardMaterial color={FLOOR_COLOR} roughness={1} />
+          </mesh>
+        </Suspense>
+        <GraphicsFrame />
+      </Canvas>
+    </GraphicsDebug>
   );
 }

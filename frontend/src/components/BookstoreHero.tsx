@@ -4,6 +4,7 @@ import type { Book } from '../types/api';
 import BookstoreShelf3D from './graphics/BookstoreShelf3D';
 import BookExperienceModal from './BookExperienceModal';
 import { isWebGLAvailable } from '../lib/webgl';
+import BookWiseBrand from './BookWiseBrand';
 
 const MAX_SHELF_BOOKS = 18;
 const SHELF_ROWS = 2;
@@ -28,9 +29,9 @@ export default function BookstoreHero({ books, onSelect }: BookstoreHeroProps) {
   return (
     <section className="overflow-hidden rounded-3xl bg-cream-100 shadow-sm dark:bg-slate-900">
       <div className="px-6 pt-8 text-center sm:px-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.3em] text-brand-600 dark:text-brand-400">
-          Bookstore
-        </p>
+        <div className="flex justify-center">
+          <BookWiseBrand />
+        </div>
         <h1 className="mt-3 font-serif text-3xl leading-tight text-slate-900 sm:text-4xl dark:text-slate-100">
           Escolha uma história
           <span className="block text-brand-600 dark:text-brand-400">Entre nela</span>

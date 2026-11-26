@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { RefreshCw, Search } from 'lucide-react';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import type { Book, Category, Page } from '../../types/api';
 import { booksService } from '../../services/booksService';
 import { categoriesService } from '../../services/categoriesService';
@@ -9,12 +10,15 @@ import BookCarousel from '../../components/BookCarousel';
 import CategoryFilterBar from '../../components/CategoryFilterBar';
 import BookstoreHero from '../../components/BookstoreHero';
 import BookExperienceModal from '../../components/BookExperienceModal';
+import { catalogBook } from '../../lib/bookNavigation';
 
 const PAGE_SIZE = 8;
 
 type ExpandedSection = 'popular' | 'latest' | null;
 
 export default function CatalogPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [data, setData] = useState<Page<Book> | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [search, setSearch] = useState('');
@@ -25,6 +29,15 @@ export default function CatalogPage() {
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<ExpandedSection>(null);
   const [selected, setSelected] = useState<Book | null>(null);
+
+  useEffect(() => {
+    if (!data || loading || !searchParams.has('book')) return;
+    const book = catalogBook(data.content, searchParams.get('book'), location.state?.reopenBook);
+    if (book) setSelected(book);
+    const next = new URLSearchParams(searchParams);
+    next.delete('book');
+    setSearchParams(next, { replace: true });
+  }, [data, loading, searchParams, setSearchParams, location.state]);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -107,16 +120,16 @@ export default function CatalogPage() {
           <input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="find book"
+            placeholder="Buscar livro, autor ou ISBN…"
             aria-label="Buscar por título, autor ou ISBN"
             className="w-full rounded-full border border-cream-200 bg-white py-3 pl-12 pr-4 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
           />
         </div>
         <button
           type="submit"
-          className="rounded-full bg-gradient-to-r from-pink-500 via-orange-400 to-emerald-400 px-8 py-3 text-sm font-semibold text-white shadow-sm transition hover:opacity-90"
+          className="rounded-full bg-brand-600 px-8 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700"
         >
-          search
+          Buscar
         </button>
       </form>
 

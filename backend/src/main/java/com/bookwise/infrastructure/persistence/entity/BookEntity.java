@@ -57,6 +57,9 @@ public class BookEntity {
     @Column(precision = 10, scale = 2)
     private BigDecimal price;
 
+    @Column(name = "loan_price", precision = 10, scale = 2)
+    private BigDecimal loanPrice;
+
     private Integer stock;
 
     @Column(name = "cover_url", length = 500)

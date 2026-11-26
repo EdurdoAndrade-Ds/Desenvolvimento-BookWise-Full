@@ -26,6 +26,7 @@ final class BookEntityMapper {
                 entity.getPublishedYear(),
                 entity.getFormat(),
                 entity.getPrice(),
+                entity.getLoanPrice(),
                 entity.getStock(),
                 entity.getCoverUrl(),
                 categories,
@@ -45,6 +46,7 @@ final class BookEntityMapper {
         entity.setPublishedYear(book.publishedYear());
         entity.setFormat(book.format());
         entity.setPrice(book.price());
+        entity.setLoanPrice(book.loanPrice());
         entity.setStock(book.stock());
         entity.setCoverUrl(book.coverUrl());
         if (book.createdAt() != null) {

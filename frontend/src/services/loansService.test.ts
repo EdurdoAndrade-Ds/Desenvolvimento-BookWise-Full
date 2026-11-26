@@ -16,6 +16,28 @@ afterEach(() => {
 });
 
 describe('loansService', () => {
+  it('paga a cobranca via POST e retorna o estado pago', async () => {
+    const fetchMock = mockFetch({ id: 3, chargeAmount: 7.9, chargeStatus: 'PAID' });
+    const loan = await loansService.pay(3);
+    expect(fetchMock.mock.calls[0][0]).toBe('/api/v1/loans/3/pay');
+    expect(fetchMock.mock.calls[0][1].method).toBe('POST');
+    expect(loan.chargeStatus).toBe('PAID');
+  });
+
+  it('preserva a mensagem de cobranca pendente do backend', async () => {
+    mockFetch({ message: 'Usuario possui cobranca de emprestimo pendente' }, 409);
+    await expect(
+      loansService.create({ userId: 1, items: [{ bookId: 2, quantity: 1 }] }),
+    ).rejects.toMatchObject({
+      status: 409,
+      message: 'Usuario possui cobranca de emprestimo pendente',
+    });
+  });
+
+  it('propaga erro ao pagar sem cobranca pendente', async () => {
+    mockFetch({ message: 'Emprestimo nao possui cobranca pendente' }, 409);
+    await expect(loansService.pay(3)).rejects.toMatchObject({ status: 409 });
+  });
   it('monta a query string apenas com os parametros informados', async () => {
     const fetchMock = mockFetch({ content: [], totalElements: 0 });
 
