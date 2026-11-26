@@ -21,7 +21,7 @@ public class KeepAliveRepositoryAdapter implements KeepAliveRepository {
     }
 
     public KeepAliveConfig save(KeepAliveConfig config) {
-        var entity = new KeepAliveEntity();
+        var entity = repository.findById(1L).orElseGet(KeepAliveEntity::new);
         entity.setEnabled(config.enabled());
         entity.setIntervalMinutes(config.intervalMinutes());
         entity.setActiveUntil(config.activeUntil());
