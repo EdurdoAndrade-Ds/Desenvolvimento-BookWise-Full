@@ -3,7 +3,7 @@ import { Plus, ArrowLeftRight, RefreshCw, Undo2 } from 'lucide-react';
 import type { Loan, Page } from '../types/api';
 import { loansService } from '../services/loansService';
 import { ApiError } from '../services/http';
-import { formatDate } from '../lib/format';
+import { formatCurrency, formatDate } from '../lib/format';
 import { LOAN_STATUS_LABELS, LOAN_STATUS_STYLES } from '../lib/loanStatus';
 import LoanFormModal from '../components/LoanFormModal';
 import { useFeedback } from '../feedback/useFeedback';
@@ -73,7 +73,7 @@ export default function LoansPage() {
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm max-lg:overflow-x-auto max-lg:overscroll-x-contain dark:border-slate-800 dark:bg-slate-900">
         {error ? (
           <div className="flex flex-col items-center gap-3 p-10 text-center">
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
@@ -101,6 +101,7 @@ export default function LoansPage() {
                 <th className="px-6 py-3 font-medium">Previsto</th>
                 <th className="px-6 py-3 font-medium">Devolução</th>
                 <th className="px-6 py-3 font-medium">Status</th>
+                <th className="px-6 py-3 font-medium">Cobrança</th>
                 <th className="px-6 py-3" />
               </tr>
             </thead>
@@ -128,6 +129,14 @@ export default function LoansPage() {
                     >
                       {LOAN_STATUS_LABELS[loan.status]}
                     </span>
+                  </td>
+                  <td className="px-6 py-3 text-slate-600 dark:text-slate-300">
+                    {formatCurrency(loan.chargeAmount)} ·{' '}
+                    {loan.chargeStatus === 'PENDING'
+                      ? 'Pendente'
+                      : loan.chargeStatus === 'PAID'
+                        ? 'Pago'
+                        : 'Grátis'}
                   </td>
                   <td className="px-6 py-3 text-right">
                     {loan.status !== 'RETURNED' && (

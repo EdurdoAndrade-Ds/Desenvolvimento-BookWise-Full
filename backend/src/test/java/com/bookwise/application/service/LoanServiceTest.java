@@ -22,6 +22,8 @@ import com.bookwise.domain.model.Fine;
 import com.bookwise.domain.model.FinePaymentStatus;
 import com.bookwise.domain.model.Loan;
 import com.bookwise.domain.model.LoanItem;
+import com.bookwise.domain.model.LoanChargeStatus;
+import com.bookwise.domain.exception.LoanNotFoundException;
 import com.bookwise.domain.model.User;
 import com.bookwise.domain.model.UserRole;
 import com.bookwise.domain.port.BookRepository;
@@ -190,8 +192,8 @@ class LoanServiceTest {
 
     @Test
     void renewShouldRejectWhenMaxRenewalsReached() {
-        Loan loan = new Loan(20L, 1L, "Reader", List.of(new LoanItem(10L, "Book", 1)),
-                LocalDate.now(), LocalDate.now().plusDays(3), null, MAX_RENEWALS, null);
+        Loan loan = new Loan(20L, 1L, "Reader", List.of(new LoanItem(10L, "Book", 1, BigDecimal.ZERO)),
+                LocalDate.now(), LocalDate.now().plusDays(3), null, MAX_RENEWALS, BigDecimal.ZERO, null, null, null);
         when(loanRepository.findById(loan.id())).thenReturn(Optional.of(loan));
 
         assertThrows(BusinessException.class, () -> service.renew(loan.id()));
@@ -319,9 +321,13 @@ class LoanServiceTest {
     }
 
     private BusinessProperties properties(int maxRenewals) {
+        return properties(maxRenewals, true);
+    }
+
+    private BusinessProperties properties(int maxRenewals, boolean blockOnPendingCharges) {
         return new BusinessProperties(
                 new BusinessProperties.Loan(
-                        DEFAULT_DAYS, MAX_ACTIVE_PER_USER, MAX_ITEMS_PER_LOAN, true, maxRenewals, RENEWAL_DAYS),
+                        DEFAULT_DAYS, MAX_ACTIVE_PER_USER, MAX_ITEMS_PER_LOAN, true, maxRenewals, RENEWAL_DAYS, blockOnPendingCharges),
                 new BusinessProperties.Fine(new BigDecimal("2.00")),
                 new BusinessProperties.Reservation(7, true),
                 new BusinessProperties.Report(3, 7, 5));
@@ -337,18 +343,130 @@ class LoanServiceTest {
 
     private Book book(BookFormat format, Integer stock) {
         return new Book(10L, "Book", "Author", "isbn", "Genre", 2024,
-                format, new BigDecimal("10.00"), stock, null, List.of(), null);
+                format, new BigDecimal("10.00"), null, stock, null, List.of(), null);
     }
 
     private Loan loan(LocalDate dueDate, LocalDate returnDate) {
         return new Loan(20L, 1L, "Reader",
-                List.of(new LoanItem(10L, "Book", 2)),
-                dueDate.minusDays(DEFAULT_DAYS), dueDate, returnDate, 0, null);
+                List.of(new LoanItem(10L, "Book", 2, BigDecimal.ZERO)),
+                dueDate.minusDays(DEFAULT_DAYS), dueDate, returnDate, 0, BigDecimal.ZERO, null, null, null);
     }
 
     private Fine pendingFine(int daysLate) {
         return new Fine(30L, 20L, "Reader",
                 new BigDecimal("2.00").multiply(BigDecimal.valueOf(daysLate)), daysLate,
                 FinePaymentStatus.PENDING, null, null);
+    }
+
+    private Book pricedBook(BigDecimal loanPrice) {
+        return new Book(10L, "Book", "Author", "isbn", "Genre", 2024,
+                BookFormat.DIGITAL, new BigDecimal("10.00"), loanPrice, null, null, List.of(), null);
+    }
+
+    @Test
+    void createSnapshotsLoanPriceAndTotalQuantity() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(bookRepository.findById(10L)).thenReturn(Optional.of(pricedBook(new BigDecimal("7.90"))));
+        when(loanRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LoanResponse response = service.create(request(null, 10L, 3));
+
+        assertEquals(new BigDecimal("23.70"), response.chargeAmount());
+        assertEquals(new BigDecimal("7.90"), response.items().get(0).unitLoanPrice());
+        assertEquals(LoanChargeStatus.PENDING, response.chargeStatus());
+        assertEquals(null, response.chargePaymentDate());
+    }
+
+    @Test
+    void reservationConversionCreatesCharge() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(bookRepository.findById(10L)).thenReturn(Optional.of(pricedBook(new BigDecimal("4.90"))));
+        when(loanRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LoanResponse response = service.createFromReservation(1L, 10L, true);
+
+        assertEquals(new BigDecimal("4.90"), response.chargeAmount());
+        assertEquals(LoanChargeStatus.PENDING, response.chargeStatus());
+        verify(bookRepository, never()).save(any());
+    }
+
+    @Test
+    void nullAndZeroPricesDoNotCreateCharge() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(bookRepository.findById(10L)).thenReturn(Optional.of(pricedBook(null)), Optional.of(pricedBook(BigDecimal.ZERO)));
+        when(loanRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        for (int i = 0; i < 2; i++) {
+            LoanResponse response = service.create(request(null, 10L, 1));
+            assertEquals(0, response.chargeAmount().signum());
+            assertEquals(null, response.chargeStatus());
+            assertEquals(null, response.chargePaymentDate());
+        }
+    }
+
+    @Test
+    void payMarksChargePaidAndRejectsSecondPayment() {
+        Loan pending = new Loan(20L, 1L, "Reader", List.of(), LocalDate.now(), LocalDate.now().plusDays(14),
+                null, 0, new BigDecimal("7.90"), LoanChargeStatus.PENDING, null, null);
+        when(loanRepository.findById(20L)).thenReturn(Optional.of(pending), Optional.of(pending.withChargePaid(LocalDate.now())));
+        when(loanRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        LoanResponse paid = service.pay(20L);
+
+        assertEquals(LoanChargeStatus.PAID, paid.chargeStatus());
+        assertEquals(LocalDate.now(), paid.chargePaymentDate());
+        assertEquals(pending.chargeAmount(), paid.chargeAmount());
+        assertThrows(BusinessException.class, () -> service.pay(20L));
+    }
+
+    @Test
+    void payRejectsFreeAndMissingLoans() {
+        when(loanRepository.findById(20L)).thenReturn(Optional.of(loan(LocalDate.now(), null)));
+        assertThrows(BusinessException.class, () -> service.pay(20L));
+        assertThrows(LoanNotFoundException.class, () -> service.pay(999L));
+        verify(loanRepository, never()).save(any());
+    }
+
+    @Test
+    void pendingChargeBlocksBothCreationPaths() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(loanRepository.existsPendingChargeByUserId(1L)).thenReturn(true);
+        assertThrows(BusinessException.class, () -> service.create(request(null, 10L, 1)));
+        assertThrows(BusinessException.class, () -> service.createFromReservation(1L, 10L, true));
+        verify(loanRepository, never()).save(any());
+        verify(bookRepository, never()).save(any());
+    }
+
+    @Test
+    void disabledPendingChargeBlockingAllowsCreation() {
+        BusinessProperties config = properties(MAX_RENEWALS, false);
+        service = new LoanService(loanRepository, userRepository, bookRepository,
+                new StockPolicy(bookRepository), new FinePolicy(fineRepository, config), config);
+        org.mockito.Mockito.lenient().when(loanRepository.existsPendingChargeByUserId(1L)).thenReturn(true);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user()));
+        when(bookRepository.findById(10L)).thenReturn(Optional.of(pricedBook(new BigDecimal("7.90"))));
+        when(loanRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        assertEquals(LoanChargeStatus.PENDING, service.create(request(null, 10L, 1)).chargeStatus());
+        verify(loanRepository, never()).existsPendingChargeByUserId(any());
+    }
+
+    @Test
+    void mixedBooksAreSummedAndCopiesPreserveCharge() {
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user()));
+        Book first = pricedBook(new BigDecimal("4.90"));
+        Book second = new Book(11L, "Second", "Author", "second", null, null, BookFormat.DIGITAL,
+                BigDecimal.TEN, new BigDecimal("12.90"), null, null, List.of(), null);
+        when(bookRepository.findById(10L)).thenReturn(Optional.of(first));
+        when(bookRepository.findById(11L)).thenReturn(Optional.of(second));
+        when(loanRepository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        service.create(new LoanRequest(1L, null, List.of(
+                new LoanItemRequest(10L, 2), new LoanItemRequest(11L, 1))));
+        ArgumentCaptor<Loan> captor = ArgumentCaptor.forClass(Loan.class);
+        verify(loanRepository).save(captor.capture());
+        Loan saved = captor.getValue();
+        assertEquals(new BigDecimal("22.70"), saved.chargeAmount());
+        assertEquals(saved.chargeAmount(), saved.withReturnDate(LocalDate.now()).chargeAmount());
+        assertEquals(saved.chargeStatus(), saved.renewedUntil(LocalDate.now().plusDays(21)).chargeStatus());
+        assertEquals(first.loanPrice(), first.withStock(3).loanPrice());
+        assertEquals(first.loanPrice(), first.withCategories(List.of()).loanPrice());
     }
 }

@@ -76,13 +76,7 @@ export default function BookDetailPage() {
       }
       await load();
     } catch (err) {
-      setError(
-        err instanceof ApiError && err.status === 409
-          ? 'Não há estoque suficiente para concluir esta ação.'
-          : err instanceof ApiError
-            ? err.message
-            : 'Não foi possível concluir a ação.',
-      );
+      setError(err instanceof ApiError ? err.message : 'Não foi possível concluir a ação.');
     } finally {
       setBusy(null);
     }

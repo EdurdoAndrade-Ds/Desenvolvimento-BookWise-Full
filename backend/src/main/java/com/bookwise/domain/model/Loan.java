@@ -1,5 +1,6 @@
 package com.bookwise.domain.model;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -17,6 +18,9 @@ public record Loan(
         LocalDate dueDate,
         LocalDate returnDate,
         int renewalCount,
+        BigDecimal chargeAmount,
+        LoanChargeStatus chargeStatus,
+        LocalDate chargePaymentDate,
         OffsetDateTime createdAt) {
 
     /**
@@ -42,12 +46,19 @@ public record Loan(
 
     /** Copia deste emprestimo com a data de devolucao informada. */
     public Loan withReturnDate(LocalDate date) {
-        return new Loan(id, userId, userName, items, loanDate, dueDate, date, renewalCount, createdAt);
+        return new Loan(id, userId, userName, items, loanDate, dueDate, date, renewalCount,
+                chargeAmount, chargeStatus, chargePaymentDate, createdAt);
     }
 
     /** Copia deste emprestimo renovado: nova data prevista e contador incrementado. */
     public Loan renewedUntil(LocalDate newDueDate) {
-        return new Loan(id, userId, userName, items, loanDate, newDueDate, returnDate, renewalCount + 1, createdAt);
+        return new Loan(id, userId, userName, items, loanDate, newDueDate, returnDate, renewalCount + 1,
+                chargeAmount, chargeStatus, chargePaymentDate, createdAt);
+    }
+
+    public Loan withChargePaid(LocalDate date) {
+        return new Loan(id, userId, userName, items, loanDate, dueDate, returnDate, renewalCount,
+                chargeAmount, LoanChargeStatus.PAID, date, createdAt);
     }
 
     /** Soma das quantidades de todos os itens do emprestimo. */

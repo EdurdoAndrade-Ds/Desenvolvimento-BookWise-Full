@@ -69,4 +69,10 @@ public class LoanController {
     public LoanResponse returnLoan(@PathVariable Long id) {
         return service.returnLoan(id);
     }
+
+    @PostMapping("/{id}/pay")
+    @Operation(summary = "Registra o pagamento da cobranca de um emprestimo")
+    public LoanResponse pay(@PathVariable Long id) {
+        return service.pay(id);
+    }
 }

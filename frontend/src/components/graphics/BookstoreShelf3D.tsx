@@ -1,8 +1,12 @@
 import { Suspense, useEffect, useMemo, useState } from 'react';
 import { Canvas, useThree, type ThreeEvent } from '@react-three/fiber';
-import { PerspectiveCamera } from '@react-three/drei';
-import type { PerspectiveCamera as ThreePerspectiveCamera } from 'three';
+import { Detailed, OrbitControls, PerspectiveCamera } from '@react-three/drei';
+import { DoubleSide, FrontSide } from 'three';
+import type { PerspectiveCamera as ThreePerspectiveCamera, Texture } from 'three';
 import type { Book } from '../../types/api';
+import { useGraphicsDebug } from '../../graphics/debugState';
+import { lodDistance } from '../../graphics/sceneMath';
+import GraphicsDebug, { GraphicsFrame } from './GraphicsDebug';
 import { createCoverTexture, createShelfLabelTexture } from '../../graphics/coverTexture';
 import {
   buildStorefrontShelf,
@@ -56,34 +60,47 @@ export default function BookstoreShelf3D({
   const minVisibleWidth = Math.min(shelf.width, MIN_VISIBLE_BOOKS * FACED_BOOK_STEP);
 
   return (
-    <Canvas dpr={[1, 2]}>
-      <PerspectiveCamera makeDefault position={[0, 0, shelf.width]} fov={CAMERA_FOV} />
-      <FitCamera minWidth={minVisibleWidth} height={shelf.height + HEADROOM} />
-      <color attach="background" args={[BACK_COLOR]} />
-      <ambientLight intensity={1.5} />
-      <directionalLight position={KEY_LIGHT_POSITION} intensity={1.3} />
-      <pointLight position={WARM_LIGHT_POSITION} intensity={10} color="#e6c7a6" distance={26} />
+    <GraphicsDebug>
+      <Canvas dpr={[1, 2]}>
+        <PerspectiveCamera
+          makeDefault
+          position={[0, 0, shelf.width]}
+          fov={CAMERA_FOV}
+          near={0.1}
+          far={100}
+        />
+        <FitCamera minWidth={minVisibleWidth} height={shelf.height + HEADROOM} />
+        <DebugCamera />
+        <color attach="background" args={[BACK_COLOR]} />
+        <ambientLight intensity={1.5} />
+        <directionalLight position={KEY_LIGHT_POSITION} intensity={1.3} />
+        <pointLight position={WARM_LIGHT_POSITION} intensity={10} color="#e6c7a6" distance={26} />
 
-      <Suspense fallback={null}>
-        <group position={[0, verticalCenter, 0]}>
-          <mesh position={[0, shelf.topY - shelf.height / 2, -shelf.depth / 2]}>
-            <boxGeometry
-              args={[shelf.width + STRUCTURE_BLEED, shelf.height + FACED_BOOK_HEIGHT * 3, 0.15]}
-            />
-            <meshStandardMaterial color={BACK_COLOR} roughness={1} />
-          </mesh>
+        <Suspense fallback={null}>
+          <group position={[0, verticalCenter, 0]}>
+            <mesh position={[0, shelf.topY - shelf.height / 2, -shelf.depth / 2]}>
+              <boxGeometry
+                args={[shelf.width + STRUCTURE_BLEED, shelf.height + FACED_BOOK_HEIGHT * 3, 0.15]}
+              />
+              <meshStandardMaterial color={BACK_COLOR} roughness={1} />
+            </mesh>
 
-          {shelf.boards.map((board) => (
-            <ShelfBoardMesh key={board.index} board={board} backDepth={shelf.depth} />
-          ))}
+            {shelf.boards.map((board) => (
+              <ShelfBoardMesh key={board.index} board={board} backDepth={shelf.depth} />
+            ))}
 
-          {shelf.books.map((entry) => (
-            <FacedBookMesh key={entry.key} entry={entry} onSelect={onSelect} />
-          ))}
-        </group>
-      </Suspense>
-    </Canvas>
+            <ShelfBooks entries={shelf.books} onSelect={onSelect} />
+          </group>
+        </Suspense>
+        <GraphicsFrame />
+      </Canvas>
+    </GraphicsDebug>
   );
+}
+
+function DebugCamera() {
+  const { enabled } = useGraphicsDebug();
+  return enabled ? <OrbitControls makeDefault minDistance={2} maxDistance={70} /> : null;
 }
 
 /**
@@ -137,19 +154,56 @@ function ShelfBoardMesh({ board, backDepth }: { board: FacedBoard; backDepth: nu
   );
 }
 
-function FacedBookMesh({ entry, onSelect }: { entry: FacedBook; onSelect: (book: Book) => void }) {
-  const [hovered, setHovered] = useState(false);
-  const texture = useMemo(
-    () =>
-      createCoverTexture({
-        title: entry.book.title,
-        author: entry.book.author,
-        background: entry.color,
-      }),
-    [entry.book.title, entry.book.author, entry.color],
-  );
+function ShelfBooks({
+  entries,
+  onSelect,
+}: {
+  entries: FacedBook[];
+  onSelect: (book: Book) => void;
+}) {
+  const anisotropy = useThree((state) => state.gl.capabilities.getMaxAnisotropy());
+  const textures = useMemo(() => {
+    const result = new Map<Book, Texture>();
+    for (const { book, color } of entries) {
+      if (!result.has(book)) {
+        result.set(
+          book,
+          createCoverTexture({
+            title: book.title,
+            author: book.author,
+            background: color,
+            anisotropy,
+          }),
+        );
+      }
+    }
+    return result;
+  }, [entries, anisotropy]);
 
-  useEffect(() => () => texture.dispose(), [texture]);
+  useEffect(() => () => textures.forEach((texture) => texture.dispose()), [textures]);
+
+  return entries.map((entry) => (
+    <FacedBookMesh
+      key={entry.key}
+      entry={entry}
+      texture={textures.get(entry.book)!}
+      onSelect={onSelect}
+    />
+  ));
+}
+
+function FacedBookMesh({
+  entry,
+  texture,
+  onSelect,
+}: {
+  entry: FacedBook;
+  texture: Texture;
+  onSelect: (book: Book) => void;
+}) {
+  const [hovered, setHovered] = useState(false);
+  const { flags } = useGraphicsDebug();
+  const side = flags.backface ? FrontSide : DoubleSide;
 
   useEffect(() => {
     if (!hovered) return;
@@ -167,7 +221,7 @@ function FacedBookMesh({ entry, onSelect }: { entry: FacedBook; onSelect: (book:
   };
 
   return (
-    <mesh
+    <group
       position={[x, hovered ? y + HOVER_OFFSET / 2 : y, hovered ? z + HOVER_OFFSET : z]}
       onClick={handleClick}
       onPointerOver={(event) => {
@@ -176,18 +230,40 @@ function FacedBookMesh({ entry, onSelect }: { entry: FacedBook; onSelect: (book:
       }}
       onPointerOut={() => setHovered(false)}
     >
-      <boxGeometry args={[FACED_BOOK_WIDTH, FACED_BOOK_HEIGHT, FACED_BOOK_DEPTH]} />
-      {Array.from({ length: FACE_COUNT }, (_, face) => (
-        <meshStandardMaterial
-          key={face}
-          attach={`material-${face}`}
-          color={face === FRONT_FACE_INDEX ? '#ffffff' : entry.color}
-          map={face === FRONT_FACE_INDEX ? texture : null}
-          roughness={0.6}
-          emissive={entry.color}
-          emissiveIntensity={hovered ? 0.28 : 0}
-        />
-      ))}
-    </mesh>
+      <Detailed distances={[0, lodDistance(flags.lod, hovered)]}>
+        <mesh frustumCulled={flags.frustum}>
+          <boxGeometry
+            args={[FACED_BOOK_WIDTH, FACED_BOOK_HEIGHT, FACED_BOOK_DEPTH]}
+            onUpdate={(geometry) => geometry.computeBoundingSphere()}
+          />
+          {Array.from({ length: FACE_COUNT }, (_, face) => (
+            <meshStandardMaterial
+              key={face}
+              attach={`material-${face}`}
+              side={side}
+              color={face === FRONT_FACE_INDEX ? '#ffffff' : entry.color}
+              map={face === FRONT_FACE_INDEX ? texture : null}
+              toneMapped={face !== FRONT_FACE_INDEX}
+              roughness={0.6}
+              emissive={entry.color}
+              emissiveIntensity={hovered ? 0.28 : 0}
+            />
+          ))}
+        </mesh>
+        <mesh frustumCulled={flags.frustum}>
+          <boxGeometry
+            args={[FACED_BOOK_WIDTH, FACED_BOOK_HEIGHT, FACED_BOOK_DEPTH]}
+            onUpdate={(geometry) => geometry.computeBoundingSphere()}
+          />
+          <meshStandardMaterial
+            map={texture}
+            color="#ffffff"
+            side={side}
+            roughness={0.6}
+            toneMapped={false}
+          />
+        </mesh>
+      </Detailed>
+    </group>
   );
 }

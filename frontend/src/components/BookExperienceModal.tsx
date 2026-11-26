@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { X } from 'lucide-react';
+import { Crop, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { Book } from '../types/api';
 import BookViewer3D from './graphics/BookViewer3D';
 import BookCover from './BookCover';
@@ -57,7 +58,9 @@ export default function BookExperienceModal({
   const category = book.categories?.[0]?.name ?? book.genre;
   const inStock = (book.stock ?? 0) > 0;
   const availability =
-    book.stock === undefined ? 'exemplares no acervo' : `${book.stock} no acervo`;
+    book.stock === undefined || book.stock === null
+      ? 'exemplares no acervo'
+      : `${book.stock} no acervo`;
 
   const runAction = async (action: Action) => {
     if (!customer) {
@@ -89,13 +92,7 @@ export default function BookExperienceModal({
       }
       onCompleted?.();
     } catch (err) {
-      setError(
-        err instanceof ApiError && err.status === 409
-          ? 'Não há estoque suficiente para concluir esta ação.'
-          : err instanceof ApiError
-            ? err.message
-            : 'Não foi possível concluir a ação.',
-      );
+      setError(err instanceof ApiError ? err.message : 'Não foi possível concluir a ação.');
     } finally {
       setBusy(null);
     }
@@ -146,102 +143,128 @@ export default function BookExperienceModal({
           )}
         </div>
 
+        <Link
+          to={`/cover-studio?book=${book.id}`}
+          state={{ fromModal: true }}
+          onClick={onClose}
+          className="mobile-touch absolute left-4 top-24 z-20 inline-flex items-center gap-2 rounded-full border border-cream-200 bg-[#f6f3ec]/95 px-3 py-2 text-xs font-medium text-slate-700 shadow-sm transition hover:bg-white sm:left-6 dark:border-slate-700 dark:bg-slate-900/95 dark:text-slate-200 dark:hover:bg-slate-800"
+        >
+          <Crop className="h-4 w-4" />
+          Analisar capa
+        </Link>
+
         <aside
           aria-hidden={!coverOpen}
-          className={`absolute inset-x-0 bottom-0 z-10 max-h-[70%] overflow-auto bg-[#f6f3ec] px-8 py-9 shadow-2xl transition-transform duration-300 sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-none sm:w-[25rem] dark:bg-slate-900 ${
+          className={`absolute inset-x-0 bottom-0 z-10 max-h-[70%] overflow-auto bg-[#f6f3ec] px-8 py-9 shadow-2xl transition-transform duration-300 max-lg:flex max-lg:flex-col max-lg:overflow-hidden max-lg:p-0 sm:inset-y-0 sm:left-auto sm:right-0 sm:max-h-none sm:w-[25rem] dark:bg-slate-900 ${
             coverOpen
               ? 'translate-y-0 sm:translate-x-0'
               : 'translate-y-full sm:translate-y-0 sm:translate-x-full'
           }`}
         >
-          {category ? (
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#8a6b4f] dark:text-brand-300">
-              {category}
-            </p>
-          ) : null}
-          <h2 className="mt-3 font-serif text-4xl leading-tight text-[#1d1b18] dark:text-slate-100">
-            {book.title}
-          </h2>
-          <p className="mt-2 text-sm text-[#8a6b4f] dark:text-slate-400">{book.author}</p>
+          <div
+            data-book-sheet-toolbar
+            className="shrink-0 border-b border-[#e0d9cc] bg-[#f6f3ec] px-8 py-3 lg:hidden dark:border-slate-800 dark:bg-slate-900"
+          >
+            <button
+              type="button"
+              onClick={() => setCoverOpen(false)}
+              className="w-full rounded-lg px-3 text-sm font-medium text-slate-700 hover:bg-[#ece7dd] dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              Voltar ao 3D / Espiar
+            </button>
+          </div>
+          <div
+            data-book-sheet-content
+            className="max-lg:min-h-0 max-lg:flex-1 max-lg:overflow-y-auto max-lg:overscroll-y-contain max-lg:px-8 max-lg:py-6 lg:contents"
+          >
+            {category ? (
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#8a6b4f] dark:text-brand-300">
+                {category}
+              </p>
+            ) : null}
+            <h2 className="mt-3 font-serif text-4xl leading-tight text-[#1d1b18] dark:text-slate-100">
+              {book.title}
+            </h2>
+            <p className="mt-2 text-sm text-[#8a6b4f] dark:text-slate-400">{book.author}</p>
 
-          <div className="mt-8 border-t border-[#e0d9cc] pt-6 dark:border-slate-800">
-            <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#9b9488] dark:text-slate-500">
-              Sobre o livro
-            </p>
-            <dl className="mt-4 space-y-2 text-sm text-[#4d4842] dark:text-slate-300">
-              <Row label="ISBN" value={book.isbn} />
-              <Row label="Formato" value={formatBookFormat(book.format)} />
-              <Row
-                label="Publicação"
-                value={book.publishedYear === undefined ? '—' : String(book.publishedYear)}
+            <div className="mt-8 border-t border-[#e0d9cc] pt-6 dark:border-slate-800">
+              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#9b9488] dark:text-slate-500">
+                Sobre o livro
+              </p>
+              <dl className="mt-4 space-y-2 text-sm text-[#4d4842] dark:text-slate-300">
+                <Row label="ISBN" value={book.isbn} />
+                <Row label="Formato" value={formatBookFormat(book.format)} />
+                <Row label="Publicação" value={book.publishedYear?.toString() ?? '—'} />
+              </dl>
+            </div>
+
+            <div className="mt-8 grid grid-cols-2 gap-6 border-t border-[#e0d9cc] pt-6 dark:border-slate-800">
+              <div>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#9b9488] dark:text-slate-500">
+                  Empréstimo
+                </p>
+                <p className="mt-2 font-serif text-2xl text-[#1d1b18] dark:text-slate-100">
+                  {(book.loanPrice ?? 0) > 0 ? formatCurrency(book.loanPrice ?? 0) : 'Grátis'}
+                </p>
+                <p className="mt-1 text-xs text-[#9b9488] max-lg:min-h-8 dark:text-slate-500">
+                  {LOAN_DAYS} dias · {availability}
+                </p>
+                <button
+                  type="button"
+                  disabled={!inStock || busy !== null}
+                  onClick={() => void runAction('borrow')}
+                  className="mt-4 inline-flex w-full items-center justify-center whitespace-nowrap rounded-md border border-[#d5ccbd] px-2 py-2.5 text-[0.8rem] font-semibold text-[#1d1b18] hover:bg-[#ece7dd] disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
+                >
+                  {busy === 'borrow' ? 'Processando...' : 'Emprestar agora'}
+                </button>
+                <button
+                  type="button"
+                  disabled={busy !== null}
+                  onClick={() => void runAction('reserve')}
+                  className="mt-2 w-full text-[0.75rem] font-medium text-[#8a6b4f] underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-40 dark:text-brand-300"
+                >
+                  {busy === 'reserve' ? 'Processando...' : 'Reservar'}
+                </button>
+              </div>
+              <div>
+                <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#9b9488] dark:text-slate-500">
+                  Compra
+                </p>
+                <p className="mt-2 font-serif text-2xl text-[#1d1b18] dark:text-slate-100">
+                  {formatCurrency(book.price)}
+                </p>
+                <p className="mt-1 text-xs text-[#9b9488] max-lg:min-h-8 dark:text-slate-500">
+                  {formatBookFormat(book.format).toLowerCase()}
+                </p>
+                <button
+                  type="button"
+                  disabled={!inStock || busy !== null}
+                  onClick={() => void runAction('buy')}
+                  className="mt-4 inline-flex w-full items-center justify-center whitespace-nowrap rounded-md bg-[#2a211b] px-2 py-2.5 text-[0.8rem] font-semibold text-[#f6f3ec] hover:bg-[#3b2f26] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  {busy === 'buy' ? 'Processando...' : 'Comprar livro'}
+                </button>
+              </div>
+            </div>
+
+            {error ? (
+              <p className="mt-5 rounded-md bg-[#f6e7e2] px-3 py-2 text-xs text-[#8a3a27] dark:bg-red-950/40 dark:text-red-300">
+                {error}
+              </p>
+            ) : null}
+            {success ? (
+              <p className="mt-5 rounded-md bg-[#e6efe4] px-3 py-2 text-xs text-[#2f5d3a] dark:bg-emerald-950/40 dark:text-emerald-300">
+                {success}
+              </p>
+            ) : null}
+
+            <p className="mt-6 flex items-center gap-2 border-t border-[#e0d9cc] pt-5 text-xs text-[#6f6a62] dark:border-slate-800 dark:text-slate-400">
+              <span
+                className={`h-2 w-2 rounded-full ${inStock ? 'bg-emerald-600' : 'bg-[#c08457]'}`}
               />
-            </dl>
-          </div>
-
-          <div className="mt-8 grid grid-cols-2 gap-6 border-t border-[#e0d9cc] pt-6 dark:border-slate-800">
-            <div>
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#9b9488] dark:text-slate-500">
-                Empréstimo
-              </p>
-              <p className="mt-2 font-serif text-2xl text-[#1d1b18] dark:text-slate-100">Grátis</p>
-              <p className="mt-1 text-xs text-[#9b9488] dark:text-slate-500">
-                {LOAN_DAYS} dias · {availability}
-              </p>
-              <button
-                type="button"
-                disabled={!inStock || busy !== null}
-                onClick={() => void runAction('borrow')}
-                className="mt-4 inline-flex w-full items-center justify-center whitespace-nowrap rounded-md border border-[#d5ccbd] px-2 py-2.5 text-[0.8rem] font-semibold text-[#1d1b18] hover:bg-[#ece7dd] disabled:cursor-not-allowed disabled:opacity-40 dark:border-slate-700 dark:text-slate-100 dark:hover:bg-slate-800"
-              >
-                {busy === 'borrow' ? 'Processando...' : 'Emprestar agora'}
-              </button>
-              <button
-                type="button"
-                disabled={busy !== null}
-                onClick={() => void runAction('reserve')}
-                className="mt-2 w-full text-[0.75rem] font-medium text-[#8a6b4f] underline-offset-2 hover:underline disabled:cursor-not-allowed disabled:opacity-40 dark:text-brand-300"
-              >
-                {busy === 'reserve' ? 'Processando...' : 'Reservar'}
-              </button>
-            </div>
-            <div>
-              <p className="text-[0.7rem] font-semibold uppercase tracking-[0.18em] text-[#9b9488] dark:text-slate-500">
-                Compra
-              </p>
-              <p className="mt-2 font-serif text-2xl text-[#1d1b18] dark:text-slate-100">
-                {formatCurrency(book.price)}
-              </p>
-              <p className="mt-1 text-xs text-[#9b9488] dark:text-slate-500">
-                {formatBookFormat(book.format).toLowerCase()}
-              </p>
-              <button
-                type="button"
-                disabled={!inStock || busy !== null}
-                onClick={() => void runAction('buy')}
-                className="mt-4 inline-flex w-full items-center justify-center whitespace-nowrap rounded-md bg-[#2a211b] px-2 py-2.5 text-[0.8rem] font-semibold text-[#f6f3ec] hover:bg-[#3b2f26] disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {busy === 'buy' ? 'Processando...' : 'Comprar livro'}
-              </button>
-            </div>
-          </div>
-
-          {error ? (
-            <p className="mt-5 rounded-md bg-[#f6e7e2] px-3 py-2 text-xs text-[#8a3a27] dark:bg-red-950/40 dark:text-red-300">
-              {error}
+              {inStock ? 'Disponível para empréstimo e compra' : 'Sem exemplares disponíveis'}
             </p>
-          ) : null}
-          {success ? (
-            <p className="mt-5 rounded-md bg-[#e6efe4] px-3 py-2 text-xs text-[#2f5d3a] dark:bg-emerald-950/40 dark:text-emerald-300">
-              {success}
-            </p>
-          ) : null}
-
-          <p className="mt-6 flex items-center gap-2 border-t border-[#e0d9cc] pt-5 text-xs text-[#6f6a62] dark:border-slate-800 dark:text-slate-400">
-            <span
-              className={`h-2 w-2 rounded-full ${inStock ? 'bg-emerald-600' : 'bg-[#c08457]'}`}
-            />
-            {inStock ? 'Disponível para empréstimo e compra' : 'Sem exemplares disponíveis'}
-          </p>
+          </div>
         </aside>
       </div>
     </div>

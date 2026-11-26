@@ -17,6 +17,7 @@ public record BookResponse(
         Integer publishedYear,
         BookFormat format,
         BigDecimal price,
+        BigDecimal loanPrice,
         Integer stock,
         String coverUrl,
         List<CategoryRefResponse> categories,

@@ -8,6 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -38,4 +39,7 @@ public class LoanItemEntity {
 
     @Column(nullable = false)
     private int quantity;
+
+    @Column(name = "unit_loan_price", precision = 12, scale = 2, nullable = false)
+    private BigDecimal unitLoanPrice = BigDecimal.ZERO;
 }

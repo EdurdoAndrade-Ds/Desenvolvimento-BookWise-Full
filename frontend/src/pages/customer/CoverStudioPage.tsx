@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Image as ImageIcon, Upload, Wand2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Image as ImageIcon, Upload } from 'lucide-react';
 import type { Book } from '../../types/api';
 import { booksService } from '../../services/booksService';
 import { ApiError } from '../../services/http';
-import HistogramChart from '../../components/graphics/HistogramChart';
+import { parseBookId, studioBook } from '../../lib/bookNavigation';
+import CropWorkbench from '../../components/graphics/CropWorkbench';
 import {
   BOX_BLUR_KERNEL,
   EMBOSS_KERNEL,
@@ -14,12 +16,10 @@ import {
   convolve3x3,
   equalizeHistogram,
   grayscale,
-  histogram,
   invert,
   sobel,
-  type ImageHistogram,
 } from '../../graphics/imageFilters';
-import { generateCoverImageData } from '../../graphics/procedural';
+import { createBookCoverImageData } from '../../graphics/coverTexture';
 
 const COVER_WIDTH = 320;
 const COVER_HEIGHT = 460;
@@ -113,81 +113,46 @@ function applyFilter(
   }
 }
 
-/** Desenha titulo e autor sobre a capa procedural, no proprio canvas. */
-function drawCoverText(
-  context: CanvasRenderingContext2D,
-  title: string,
-  author: string,
-  width: number,
-  height: number,
-): void {
-  context.fillStyle = 'rgba(15, 23, 42, 0.35)';
-  context.fillRect(0, height * 0.62, width, height * 0.24);
-  context.fillStyle = '#f8fafc';
-  context.textAlign = 'center';
-  context.font = 'bold 26px sans-serif';
-  const words = title.split(' ');
-  const lines: string[] = [];
-  let current = '';
-  for (const word of words) {
-    const candidate = current ? `${current} ${word}` : word;
-    if (context.measureText(candidate).width > width - 40 && current) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = candidate;
-    }
-  }
-  if (current) lines.push(current);
-  lines.slice(0, 3).forEach((line, index) => {
-    context.fillText(line, width / 2, height * 0.68 + index * 30);
-  });
-  context.font = '18px sans-serif';
-  context.fillStyle = 'rgba(248, 250, 252, 0.85)';
-  context.fillText(author, width / 2, height * 0.83);
-}
-
 export default function CoverStudioPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
   const [books, setBooks] = useState<Book[]>([]);
-  const [bookId, setBookId] = useState<number | null>(null);
+  const bookId = studioBook(books, searchParams.get('book'))?.id ?? null;
+  const requestedId = parseBookId(searchParams.get('book'));
   const [source, setSource] = useState<ImageData | null>(null);
   const [sourceLabel, setSourceLabel] = useState('Capa procedural');
   const [filter, setFilter] = useState<FilterId>('none');
   const [brightness, setBrightness] = useState(0);
   const [contrast, setContrast] = useState(1);
-  const [showChannels, setShowChannels] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const sourceCanvasRef = useRef<HTMLCanvasElement>(null);
-  const resultCanvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     booksService
       .list({ page: 0, size: MAX_BOOKS })
       .then((result) => {
         setBooks(result.content);
-        if (result.content.length > 0) setBookId(result.content[0].id);
       })
       .catch((err) =>
         setError(err instanceof ApiError ? err.message : 'Não foi possível carregar os livros.'),
       );
   }, []);
 
+  useEffect(() => {
+    if (!requestedId || !books.length || books.some((book) => book.id === requestedId)) return;
+    let active = true;
+    booksService
+      .getById(requestedId)
+      .then((book) => {
+        if (active) setBooks((current) => [...current, book]);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, [requestedId, books]);
+
   const generateFromBook = useCallback((book: Book) => {
-    const canvas = document.createElement('canvas');
-    canvas.width = COVER_WIDTH;
-    canvas.height = COVER_HEIGHT;
-    const context = canvas.getContext('2d');
-    if (!context) return;
-    context.putImageData(
-      generateCoverImageData(COVER_WIDTH, COVER_HEIGHT, {
-        title: book.title,
-        author: book.author,
-      }),
-      0,
-      0,
-    );
-    drawCoverText(context, book.title, book.author, COVER_WIDTH, COVER_HEIGHT);
-    setSource(context.getImageData(0, 0, COVER_WIDTH, COVER_HEIGHT));
+    setSource(createBookCoverImageData(book, COVER_WIDTH, COVER_HEIGHT));
     setSourceLabel(`Capa procedural — ${book.title}`);
   }, []);
 
@@ -218,41 +183,29 @@ export default function CoverStudioPage() {
     image.src = url;
   };
 
-  const result = useMemo(
-    () => (source ? applyFilter(source, filter, brightness, contrast) : null),
-    [source, filter, brightness, contrast],
+  const process = useCallback(
+    (image: ImageData) => applyFilter(image, filter, brightness, contrast),
+    [filter, brightness, contrast],
   );
-
-  const resultHistogram = useMemo<ImageHistogram | null>(
-    () => (result ? histogram(result) : null),
-    [result],
-  );
-
-  useEffect(() => {
-    const context = sourceCanvasRef.current?.getContext('2d');
-    if (context && source) context.putImageData(source, 0, 0);
-  }, [source]);
-
-  useEffect(() => {
-    const context = resultCanvasRef.current?.getContext('2d');
-    if (context && result) context.putImageData(result, 0, 0);
-  }, [result]);
 
   const activeFilter = FILTERS.find((item) => item.id === filter);
 
   return (
-    <div className="space-y-6">
-      <section className="rounded-3xl bg-gradient-to-r from-brand-700 to-slate-900 px-6 py-8 text-white shadow-lg sm:px-10">
-        <p className="mb-2 flex items-center gap-2 text-sm font-medium uppercase tracking-widest text-brand-100">
-          <Wand2 className="h-4 w-4" />
-          Cover Studio
-        </p>
-        <h1 className="text-3xl font-bold">Processamento de imagem da capa</h1>
-        <p className="mt-3 max-w-3xl text-brand-100">
-          A capa é gerada proceduralmente a partir do título e do autor (hash + ruído fractal) ou
-          carregada de um arquivo. Todos os filtros percorrem o <code>ImageData</code> pixel a pixel
-          — convolução 3×3, Sobel e equalização de histograma implementados à mão, sem{' '}
-          <code>ctx.filter</code>.
+    <div className="space-y-6 text-slate-800 dark:text-slate-100">
+      <section>
+        {location.state?.fromModal && bookId !== null && (
+          <Link
+            to={`/?book=${bookId}`}
+            state={{ reopenBook: books.find((book) => book.id === bookId) }}
+            className="mb-3 inline-flex rounded-lg text-sm font-medium text-brand-600 hover:underline dark:text-brand-300"
+          >
+            ← Voltar ao livro
+          </Link>
+        )}
+        <h1 className="text-2xl font-semibold">Estúdio de capas</h1>
+        <p className="mt-2 max-w-3xl text-sm text-slate-500 dark:text-slate-400">
+          Escolha uma capa, selecione uma área e recorte. Depois gire, aplique filtros e analise
+          somente o recorte — pixel a pixel, com prévia 3D.
         </p>
       </section>
 
@@ -262,34 +215,28 @@ export default function CoverStudioPage() {
         </div>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <figure className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-            <canvas
-              ref={sourceCanvasRef}
-              width={COVER_WIDTH}
-              height={COVER_HEIGHT}
-              className="w-full rounded-lg"
+      <div className="grid items-start gap-6 xl:grid-cols-[minmax(0,1fr)_18rem]">
+        <div className="min-w-0">
+          {source ? (
+            <CropWorkbench
+              key={sourceLabel}
+              source={source}
+              process={process}
+              onReset={() => {
+                setFilter('none');
+                setBrightness(0);
+                setContrast(1);
+              }}
             />
-            <figcaption className="mt-2 truncate text-xs text-slate-500 dark:text-slate-400">
-              {sourceLabel}
-            </figcaption>
-          </figure>
-          <figure className="rounded-2xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
-            <canvas
-              ref={resultCanvasRef}
-              width={COVER_WIDTH}
-              height={COVER_HEIGHT}
-              className="w-full rounded-lg"
-            />
-            <figcaption className="mt-2 text-xs text-slate-500 dark:text-slate-400">
-              Resultado: {activeFilter?.label}
-            </figcaption>
-          </figure>
+          ) : (
+            <p className="p-6 text-sm text-slate-500">
+              Escolha um livro ou carregue uma imagem para começar.
+            </p>
+          )}
         </div>
 
         <div className="space-y-4">
-          <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+          <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Entrada
             </h2>
@@ -300,7 +247,11 @@ export default function CoverStudioPage() {
               </span>
               <select
                 value={bookId ?? ''}
-                onChange={(event) => setBookId(Number(event.target.value))}
+                onChange={(event) => {
+                  const next = new URLSearchParams(searchParams);
+                  next.set('book', event.target.value);
+                  setSearchParams(next, { replace: true, state: location.state });
+                }}
                 className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               >
                 {books.map((book) => (
@@ -325,11 +276,12 @@ export default function CoverStudioPage() {
             </label>
           </section>
 
-          <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
+          <section className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4 text-sm shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
               Filtro
             </h2>
             <select
+              aria-label="Filtro do recorte"
               value={filter}
               onChange={(event) => setFilter(event.target.value as FilterId)}
               className="w-full rounded-lg border border-slate-200 bg-white px-2 py-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
@@ -377,20 +329,10 @@ export default function CoverStudioPage() {
             ) : null}
           </section>
 
-          <section className="space-y-2 rounded-2xl border border-slate-200 bg-white p-4 text-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-                Histograma do resultado
-              </h2>
-              <button
-                onClick={() => setShowChannels((value) => !value)}
-                className="rounded-lg border border-slate-200 px-2 py-1 text-xs text-slate-600 dark:border-slate-700 dark:text-slate-300"
-              >
-                {showChannels ? 'RGB' : 'Luma'}
-              </button>
-            </div>
-            <HistogramChart histogram={resultHistogram} showChannels={showChannels} />
-          </section>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            {sourceLabel}. Filtros aplicados apenas ao recorte, após a transformação. A imagem de
+            origem permanece intacta.
+          </p>
         </div>
       </div>
     </div>

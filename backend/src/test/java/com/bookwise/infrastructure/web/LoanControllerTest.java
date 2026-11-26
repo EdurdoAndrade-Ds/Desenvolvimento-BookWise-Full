@@ -41,12 +41,17 @@ class LoanControllerTest {
     }
 
     private long createBook(int stock) throws Exception {
+        return createBook(stock, 0);
+    }
+
+    private long createBook(int stock, double loanPrice) throws Exception {
         String body = objectMapper.writeValueAsString(Map.of(
                 "title", "Livro Emprestavel",
                 "author", "Autor",
                 "isbn", "L" + System.nanoTime(),
                 "format", "PHYSICAL",
                 "price", 10.0,
+                "loanPrice", loanPrice,
                 "stock", stock));
         String json = mockMvc.perform(post("/api/v1/books")
                         .contentType(MediaType.APPLICATION_JSON).content(body))
@@ -73,6 +78,46 @@ class LoanControllerTest {
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
                 .andExpect(jsonPath("$.items[0].bookId").value((int) bookId))
                 .andExpect(jsonPath("$.items[0].quantity").value(2));
+    }
+
+    @Test
+    void payChargePersistsPaymentAndUnblocksNewLoan() throws Exception {
+        long userId = createUser();
+        long bookId = createBook(5, 7.90);
+        String json = mockMvc.perform(post("/api/v1/loans").contentType(MediaType.APPLICATION_JSON)
+                        .content(loanBody(userId, bookId, 2)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.chargeAmount").value(15.80))
+                .andExpect(jsonPath("$.items[0].unitLoanPrice").value(7.90))
+                .andExpect(jsonPath("$.chargeStatus").value("PENDING"))
+                .andReturn().getResponse().getContentAsString();
+        long id = objectMapper.readTree(json).get("id").asLong();
+        mockMvc.perform(post("/api/v1/loans").contentType(MediaType.APPLICATION_JSON)
+                        .content(loanBody(userId, bookId, 1)))
+                .andExpect(status().isConflict());
+        mockMvc.perform(post("/api/v1/loans/" + id + "/pay"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.chargeStatus").value("PAID"))
+                .andExpect(jsonPath("$.chargePaymentDate").value(java.time.LocalDate.now().toString()));
+        mockMvc.perform(get("/api/v1/loans/" + id))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.chargeStatus").value("PAID"));
+        mockMvc.perform(post("/api/v1/loans/" + id + "/pay")).andExpect(status().isConflict());
+        mockMvc.perform(post("/api/v1/loans").contentType(MediaType.APPLICATION_JSON)
+                        .content(loanBody(userId, bookId, 1)))
+                .andExpect(status().isCreated());
+    }
+
+    @Test
+    void payFreeLoanReturns409AndUnknownReturns404() throws Exception {
+        long userId = createUser();
+        long bookId = createBook(5);
+        String json = mockMvc.perform(post("/api/v1/loans").contentType(MediaType.APPLICATION_JSON)
+                        .content(loanBody(userId, bookId, 1)))
+                .andExpect(status().isCreated()).andExpect(jsonPath("$.chargeAmount").value(0))
+                .andReturn().getResponse().getContentAsString();
+        long id = objectMapper.readTree(json).get("id").asLong();
+        mockMvc.perform(post("/api/v1/loans/" + id + "/pay")).andExpect(status().isConflict());
+        mockMvc.perform(post("/api/v1/loans/999999/pay")).andExpect(status().isNotFound());
     }
 
     @Test

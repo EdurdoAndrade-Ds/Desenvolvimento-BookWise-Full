@@ -37,5 +37,7 @@ export const loansService = {
 
   renew: (id: number) => http.post<Loan>(`/api/v1/loans/${id}/renew`, {}),
 
+  pay: (id: number) => http.post<Loan>(`/api/v1/loans/${id}/pay`, {}),
+
   return: (id: number) => http.post<Loan>(`/api/v1/loans/${id}/return`, {}),
 };

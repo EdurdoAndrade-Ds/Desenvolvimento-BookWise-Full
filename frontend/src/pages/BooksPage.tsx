@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
-import { Plus, Search, Trash2, Pencil, Percent, BookOpen, RefreshCw } from 'lucide-react';
+import { Plus, Search, Percent, BookOpen, RefreshCw } from 'lucide-react';
 import BookCover from '../components/BookCover';
+import BookRowActions from '../components/BookRowActions';
 import type { Book, Page } from '../types/api';
 import { booksService, type PriceAdjustmentResult } from '../services/booksService';
 import { ApiError } from '../services/http';
@@ -82,8 +83,8 @@ export default function BooksPage() {
   return (
     <div className="space-y-5">
       {/* Barra de acoes */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative w-full sm:w-80">
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="relative w-full lg:max-w-sm">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             value={search}
@@ -92,7 +93,7 @@ export default function BooksPage() {
             className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:placeholder:text-slate-500"
           />
         </div>
-        <div className="flex gap-2">
+        <div className="grid grid-cols-2 gap-2 lg:flex lg:shrink-0">
           <button
             onClick={() => setAdjusting({})}
             className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
@@ -111,7 +112,7 @@ export default function BooksPage() {
       </div>
 
       {/* Conteudo */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="overflow-x-auto overscroll-x-contain rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         {error ? (
           <div className="flex flex-col items-center gap-3 p-10 text-center">
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
@@ -130,7 +131,7 @@ export default function BooksPage() {
             <p className="text-sm">Nenhum livro encontrado.</p>
           </div>
         ) : (
-          <table className="w-full text-left text-sm">
+          <table className="w-full text-left text-sm [&_td]:px-4 [&_th]:px-4">
             <thead className="border-b border-slate-100 text-xs uppercase tracking-wide text-slate-400 dark:border-slate-800">
               <tr>
                 <th className="px-6 py-3 font-medium">Capa</th>
@@ -143,7 +144,12 @@ export default function BooksPage() {
                 <th className="px-6 py-3 font-medium">Categorias</th>
                 <th className="px-6 py-3 font-medium">Preço</th>
                 <th className="px-6 py-3 font-medium">Estoque</th>
-                <th className="px-6 py-3" />
+                <th
+                  scope="col"
+                  className="w-40 min-w-40 px-6 py-3 text-right font-medium max-lg:w-48 max-lg:min-w-48"
+                >
+                  Ações
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -198,28 +204,13 @@ export default function BooksPage() {
                   <td className="px-6 py-3 text-slate-600 dark:text-slate-300">
                     {book.format === 'DIGITAL' ? '—' : (book.stock ?? 0)}
                   </td>
-                  <td className="px-6 py-3 text-right">
-                    <button
-                      onClick={() => setAdjusting({ book })}
-                      className="rounded-md p-1.5 text-slate-400 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-500/10"
-                      title="Ajustar preço"
-                    >
-                      <Percent className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => setEditing(book)}
-                      className="rounded-md p-1.5 text-slate-400 hover:bg-brand-50 hover:text-brand-600 dark:hover:bg-brand-500/10"
-                      title="Editar"
-                    >
-                      <Pencil className="h-4 w-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDelete(book)}
-                      className="rounded-md p-1.5 text-slate-400 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10"
-                      title="Remover"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+                  <td className="w-40 min-w-40 whitespace-nowrap px-6 py-3 text-right align-middle max-lg:w-48 max-lg:min-w-48">
+                    <BookRowActions
+                      bookTitle={book.title}
+                      onAdjust={() => setAdjusting({ book })}
+                      onEdit={() => setEditing(book)}
+                      onDelete={() => handleDelete(book)}
+                    />
                   </td>
                 </tr>
               ))}

@@ -30,6 +30,7 @@ export interface Book {
   publishedYear?: number;
   format: BookFormat;
   price?: number;
+  loanPrice?: number | null;
   stock?: number;
   coverUrl?: string;
   categories?: CategoryRef[];
@@ -40,6 +41,7 @@ export interface LoanItem {
   bookId: number;
   bookTitle: string;
   quantity: number;
+  unitLoanPrice: number;
 }
 
 export interface Loan {
@@ -51,6 +53,9 @@ export interface Loan {
   dueDate: string;
   returnDate?: string | null;
   renewalCount: number;
+  chargeAmount: number;
+  chargeStatus: 'PENDING' | 'PAID' | null;
+  chargePaymentDate: string | null;
   status: LoanStatus;
 }
 

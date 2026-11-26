@@ -14,6 +14,10 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       // Proxy para a API Spring Boot durante o desenvolvimento.
       proxy: {
+        '/actuator/health': {
+          target: apiProxyTarget,
+          changeOrigin: true,
+        },
         '/api': {
           target: apiProxyTarget,
           changeOrigin: true,

@@ -1,5 +1,6 @@
 import { Bell, Menu, Search } from 'lucide-react';
 import ThemeToggle from '../components/ThemeToggle';
+import BackendStatusIndicator from '../components/BackendStatusIndicator';
 
 interface HeaderProps {
   title: string;
@@ -9,7 +10,7 @@ interface HeaderProps {
 export default function Header({ title, onOpenSidebar }: HeaderProps) {
   return (
     <header className="flex items-center justify-between border-b border-slate-200 bg-white px-4 py-4 sm:px-8 dark:border-slate-800 dark:bg-slate-900">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 max-lg:min-w-0 max-lg:flex-1">
         <button
           type="button"
           onClick={onOpenSidebar}
@@ -18,10 +19,12 @@ export default function Header({ title, onOpenSidebar }: HeaderProps) {
         >
           <Menu className="h-5 w-5" />
         </button>
-        <h1 className="text-lg font-semibold text-slate-800 dark:text-slate-100">{title}</h1>
+        <h1 className="text-lg font-semibold text-slate-800 max-lg:truncate dark:text-slate-100">
+          {title}
+        </h1>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4">
+      <div className="flex items-center gap-2 max-lg:shrink-0 max-lg:gap-1 sm:gap-4">
         <div className="relative hidden md:block">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
@@ -43,7 +46,8 @@ export default function Header({ title, onOpenSidebar }: HeaderProps) {
         </button>
 
         <div className="flex items-center gap-2">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700 dark:bg-brand-600 dark:text-white">
+          <BackendStatusIndicator admin />
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-brand-100 text-sm font-semibold text-brand-700 max-sm:hidden dark:bg-brand-600 dark:text-white">
             AD
           </div>
           <div className="hidden text-sm leading-tight sm:block">

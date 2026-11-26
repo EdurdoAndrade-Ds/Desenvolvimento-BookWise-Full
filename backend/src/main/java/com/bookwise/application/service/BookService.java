@@ -95,6 +95,7 @@ public class BookService {
                 request.publishedYear(),
                 request.format(),
                 request.price(),
+                request.loanPrice(),
                 request.stock(),
                 request.coverUrl(),
                 BookMapper.toRefs(request.categoryIds()));

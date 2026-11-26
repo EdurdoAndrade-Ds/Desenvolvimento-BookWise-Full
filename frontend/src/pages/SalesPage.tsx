@@ -74,7 +74,7 @@ export default function SalesPage() {
         </button>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm max-lg:overflow-x-auto max-lg:overscroll-x-contain dark:border-slate-800 dark:bg-slate-900">
         {error ? (
           <div className="flex flex-col items-center gap-3 p-10 text-center">
             <p className="text-sm text-red-600 dark:text-red-400">{error}</p>

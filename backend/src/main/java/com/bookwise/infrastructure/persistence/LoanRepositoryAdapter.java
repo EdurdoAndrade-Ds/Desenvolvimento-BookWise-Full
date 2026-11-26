@@ -1,6 +1,7 @@
 package com.bookwise.infrastructure.persistence;
 
 import com.bookwise.domain.model.Loan;
+import com.bookwise.domain.model.LoanChargeStatus;
 import com.bookwise.domain.page.PageResult;
 import com.bookwise.domain.port.LoanRepository;
 import com.bookwise.infrastructure.persistence.entity.LoanEntity;
@@ -84,6 +85,11 @@ public class LoanRepositoryAdapter implements LoanRepository {
     @Override
     public long countOpenByUserId(Long userId) {
         return jpaRepository.countByUserIdAndReturnDateIsNull(userId);
+    }
+
+    @Override
+    public boolean existsPendingChargeByUserId(Long userId) {
+        return jpaRepository.existsByUserIdAndChargeStatus(userId, LoanChargeStatus.PENDING);
     }
 
     @Override

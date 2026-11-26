@@ -17,7 +17,7 @@ export default function CustomerLayout() {
             <p>BookWise · Sua biblioteca, sempre com você.</p>
             <Link
               to="/"
-              className="mt-1 inline-block text-brand-600 hover:underline dark:text-brand-400"
+              className="mobile-touch mt-1 inline-block text-brand-600 hover:underline max-lg:inline-flex dark:text-brand-400"
             >
               Voltar ao catálogo
             </Link>

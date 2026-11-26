@@ -1,5 +1,6 @@
 package com.bookwise.infrastructure.persistence.repository;
 
+import com.bookwise.domain.model.LoanChargeStatus;
 import com.bookwise.infrastructure.persistence.entity.LoanEntity;
 import java.time.LocalDate;
 import java.util.List;
@@ -15,6 +16,8 @@ import org.springframework.data.repository.query.Param;
  * Repositorio Spring Data JPA para {@link LoanEntity}.
  */
 public interface LoanJpaRepository extends JpaRepository<LoanEntity, Long> {
+
+    boolean existsByUserIdAndChargeStatus(Long userId, LoanChargeStatus chargeStatus);
 
     @Query("select l.id from LoanEntity l")
     Page<Long> findPageIds(Pageable pageable);

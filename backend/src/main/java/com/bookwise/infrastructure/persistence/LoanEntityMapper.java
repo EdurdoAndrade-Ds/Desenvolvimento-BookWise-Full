@@ -16,7 +16,7 @@ final class LoanEntityMapper {
 
     static Loan toDomain(LoanEntity entity) {
         List<LoanItem> items = entity.getItems().stream()
-                .map(i -> new LoanItem(i.getBookId(), i.getBookTitle(), i.getQuantity()))
+                .map(i -> new LoanItem(i.getBookId(), i.getBookTitle(), i.getQuantity(), i.getUnitLoanPrice()))
                 .toList();
         return new Loan(
                 entity.getId(),
@@ -27,6 +27,9 @@ final class LoanEntityMapper {
                 entity.getDueDate(),
                 entity.getReturnDate(),
                 entity.getRenewalCount(),
+                entity.getChargeAmount(),
+                entity.getChargeStatus(),
+                entity.getChargePaymentDate(),
                 entity.getCreatedAt());
     }
 
@@ -42,6 +45,9 @@ final class LoanEntityMapper {
         entity.setDueDate(loan.dueDate());
         entity.setReturnDate(loan.returnDate());
         entity.setRenewalCount(loan.renewalCount());
+        entity.setChargeAmount(loan.chargeAmount());
+        entity.setChargeStatus(loan.chargeStatus());
+        entity.setChargePaymentDate(loan.chargePaymentDate());
         if (loan.createdAt() != null) {
             entity.setCreatedAt(loan.createdAt());
         }
@@ -52,6 +58,7 @@ final class LoanEntityMapper {
                 itemEntity.setBookId(item.bookId());
                 itemEntity.setBookTitle(item.bookTitle());
                 itemEntity.setQuantity(item.quantity());
+                itemEntity.setUnitLoanPrice(item.unitLoanPrice());
                 entity.addItem(itemEntity);
             }
         }
